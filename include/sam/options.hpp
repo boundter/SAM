@@ -10,6 +10,7 @@
 #include <boost/program_options.hpp>
 
 namespace std {
+
 template<typename T>
   std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec) {
   for (auto item : vec) {
@@ -21,34 +22,19 @@ template<typename T>
 std::string to_string(const std::string& value) {
   return value;
 }
+
 }  // namespace std
 
 namespace sam {
-template<typename T>
-std::string ValueAsStringHelper(T value) {
-  return std::to_string(value);
-}
-
-template<typename T>
-std::string ValueAsStringHelper(std::vector<T> value) {
-  std::stringstream ss;
-  for (auto it = value.begin(); it != value.end(); ++it) {
-    ss << (*it);
-    if (it + 1 != value.end()) {
-      ss << ",";
-    }
-  }
-  return ss.str();
-}
 
 /*!
  * \brief Base struct for the definition of a vector holding all the arguments.
  */
 struct ArgumentBase {
-  std::string short_name;
-  std::string long_name;
-  std::string name;
-  std::string description;
+  std::string short_name_;
+  std::string long_name_;
+  std::string name_;
+  std::string description_;
 
   /*!
    *  @param long_name long name of the command line arguments.
@@ -56,37 +42,33 @@ struct ArgumentBase {
    *  @param description description of the command line argument.
    */
   ArgumentBase(std::string long_name, std::string short_name,
-      std::string description)
-  : short_name(short_name), long_name(long_name), description(description) {
-    name = long_name + "," + short_name;
-  }
-
+               std::string description)
+    : short_name_(short_name), long_name_(long_name),
+      description_(description) {name_ = long_name + "," + short_name;}
 
   /*!
    *  @param long_name long name of the command line arguments.
    *  @param description description of the command line argument.
    */
   ArgumentBase(std::string long_name, std::string description)
-  : long_name(long_name), name(long_name), description(description) {}
+    : long_name_(long_name), name_(long_name), description_(description) {}
 
   virtual void AddArgument(boost::program_options::options_description& desc) {}
-
   virtual void ParseArgument(boost::program_options::variables_map& vmap) {}
+  virtual std::string GetValueAsString() {return std::string();}
 
   std::string GetName() {
-    return long_name;
+    return long_name_;
   }
-
-  virtual std::string GetValueAsString() {return std::string();}
 };
 
-template<typename T>
 /*!
  * \brief Struct to hold the command line arguments.
  */
+template<typename T>
 struct Argument: public ArgumentBase {
-  T& value;
-  T default_value;
+  T& value_;
+  T default_value_;
 
   /*!
    *  @param long_name long name of the command line arguments.
@@ -95,10 +77,9 @@ struct Argument: public ArgumentBase {
    *  @param default_value default_value of the argument.
    */
   Argument(std::string long_name, std::string description, T& value,
-      T default_value)
-  : ArgumentBase(long_name, description), value(value),
-  default_value(default_value) {}
-
+           T default_value)
+    : ArgumentBase(long_name, description), value_(value),
+      default_value_(default_value) {}
 
   /*!
    *  @param long_name long name of the command line arguments.
@@ -108,36 +89,67 @@ struct Argument: public ArgumentBase {
    *  @param default_value default_value of the argument.
    */
   Argument(std::string long_name, std::string short_name,
-      std::string description, T& value, T default_value)
-  : ArgumentBase(long_name, short_name, description), value(value),
-  default_value(default_value) {}
-
+           std::string description, T& value, T default_value)
+    : ArgumentBase(long_name, short_name, description), value_(value),
+      default_value_(default_value) {}
 
   /*!
    *  Adds the arguments to the description.
    */
   void AddArgument(boost::program_options::options_description& desc) {
-    desc.add_options()(name.c_str(),
-        boost::program_options::value<T>()->default_value(default_value),
-        description.c_str());
+    AddArgumentHelper(default_value_, desc);
   }
-
 
   /*!
    *  Parse the arguments and save the value to the variable. If no value was
    *  passed it will set the default value.
    */
   void ParseArgument(boost::program_options::variables_map& vmap) {
-    if (vmap.count(long_name)) {
-      value = vmap[long_name].as<T>();
+    if (vmap.count(long_name_)) {
+      value_ = vmap[long_name_].as<T>();
     }
   }
 
-
   std::string GetValueAsString() {
-    return ValueAsStringHelper(value);
+    return ValueAsStringHelper(value_);
+  }
+
+ private:
+  template<typename M>
+  void AddArgumentHelper(M default_value,
+                         boost::program_options::options_description& desc) {
+    desc.add_options()(name_.c_str(),
+                       boost::program_options::value<M>()->
+                       default_value(default_value), description_.c_str());
+  }
+
+  template<typename M>
+  void AddArgumentHelper(std::vector<M> default_value,
+                         boost::program_options::options_description& desc) {
+    desc.add_options()(name_.c_str(),
+                       boost::program_options::value<std::vector<M>>()
+                       ->multitoken()-> default_value(default_value),
+                       description_.c_str());
+    }
+
+  template<typename M>
+  std::string ValueAsStringHelper(M value) {
+    return std::to_string(value);
+  }
+
+  template<typename M>
+  std::string ValueAsStringHelper(std::vector<M> value) {
+    std::stringstream ss;
+    for (auto it = value.begin(); it != value.end(); ++it) {
+      ss << (*it);
+      if (it + 1 != value.end()) {
+        ss << ",";
+      }
+    }
+    return ss.str();
   }
 };
+
 }  // namespace sam
 
 #endif  // INCLUDE_SAM_OPTIONS_HPP_

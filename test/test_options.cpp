@@ -42,7 +42,7 @@ TEST_CASE("get value of string as string", "[options]") {
 
 TEST_CASE("get value of int vector as string", "[options]") {
   std::vector<int> value({1, 2, 3});
-  sam::Argument<std::vector<int>> argument("aa", "foo", value, 
+  sam::Argument<std::vector<int>> argument("aa", "foo", value,
     std::vector<int>({1}));
     std::string value_string = "1,2,3";
     CHECK(argument.GetValueAsString() == value_string);
@@ -50,7 +50,7 @@ TEST_CASE("get value of int vector as string", "[options]") {
 
 TEST_CASE("get value of double vector as string", "[options]") {
   std::vector<double> value({1.3, 2.5});
-  sam::Argument<std::vector<double>> argument("aa", "foo", value, 
+  sam::Argument<std::vector<double>> argument("aa", "foo", value,
     std::vector<double>({1.}));
   std::string value_string = "1.3,2.5";
   CHECK(argument.GetValueAsString() == value_string);
