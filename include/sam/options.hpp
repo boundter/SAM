@@ -43,15 +43,15 @@ struct ArgumentBase {
    */
   ArgumentBase(std::string long_name, std::string short_name,
                std::string description)
-    : short_name_(short_name), long_name_(long_name),
-      description_(description) {name_ = long_name + "," + short_name;}
+      : short_name_(short_name), long_name_(long_name),
+        description_(description) {name_ = long_name + "," + short_name;}
 
   /*!
    *  @param long_name long name of the command line arguments.
    *  @param description description of the command line argument.
    */
   ArgumentBase(std::string long_name, std::string description)
-    : long_name_(long_name), name_(long_name), description_(description) {}
+      : long_name_(long_name), name_(long_name), description_(description) {}
 
   virtual void AddArgument(boost::program_options::options_description& desc) {}
   virtual void ParseArgument(boost::program_options::variables_map& vmap) {}
@@ -61,6 +61,7 @@ struct ArgumentBase {
     return long_name_;
   }
 };
+
 
 /*!
  * \brief Struct to hold the command line arguments.
@@ -78,8 +79,8 @@ struct Argument: public ArgumentBase {
    */
   Argument(std::string long_name, std::string description, T& value,
            T default_value)
-    : ArgumentBase(long_name, description), value_(value),
-      default_value_(default_value) {}
+      : ArgumentBase(long_name, description), value_(value),
+        default_value_(default_value) {}
 
   /*!
    *  @param long_name long name of the command line arguments.
@@ -90,8 +91,8 @@ struct Argument: public ArgumentBase {
    */
   Argument(std::string long_name, std::string short_name,
            std::string description, T& value, T default_value)
-    : ArgumentBase(long_name, short_name, description), value_(value),
-      default_value_(default_value) {}
+      : ArgumentBase(long_name, short_name, description), value_(value),
+        default_value_(default_value) {}
 
   /*!
    *  Adds the arguments to the description.
@@ -147,6 +148,50 @@ struct Argument: public ArgumentBase {
       }
     }
     return ss.str();
+  }
+};
+
+
+/*!
+ *  \brief Parse the command line arguments to variables.
+ */
+class ParseArguments {
+ public:
+  std::vector<std::unique_ptr<ArgumentBase>>& arguments_;
+
+  /*!
+   *  Parse the values from the command line arguments to the variables given as
+   *  Arguments. This also build the interface of the help message.
+   */
+  ParseArguments(int& argc, char* argv[],
+                 std::vector<std::unique_ptr<ArgumentBase>>& arguments)
+      : arguments_(arguments) {
+    boost::program_options::options_description desc("Allowed options");
+    AddOptions(desc);
+    boost::program_options::variables_map vmap;
+    boost::program_options::store(
+      boost::program_options::parse_command_line(argc, argv, desc), vmap);
+    boost::program_options::notify(vmap);
+    Parse(desc, vmap);
+  }
+
+ protected:
+  void AddOptions(boost::program_options::options_description& desc) {
+    desc.add_options()("help,h", "show this help message");
+    for (auto it = arguments_.begin(); it != arguments_.end(); ++it) {
+      (*it)->AddArgument(desc);
+    }
+  }
+
+  void Parse(boost::program_options::options_description& desc,
+             boost::program_options::variables_map& vmap) {
+    if (vmap.count("help")) {
+      std::cout << desc;
+      exit(0);
+    }
+    for (auto it = arguments_.begin(); it != arguments_.end(); ++it) {
+      (*it)->ParseArgument(vmap);
+    }
   }
 };
 

@@ -55,3 +55,83 @@ TEST_CASE("get value of double vector as string", "[options]") {
   std::string value_string = "1.3,2.5";
   CHECK(argument.GetValueAsString() == value_string);
 }
+
+TEST_CASE("parsing arguments", "[options]") {
+  unsigned int N, N_0 = 10;
+  double eps, eps_0 = 0.5;
+  std::string filename, filename_0 = "a.csv";
+  std::vector<std::unique_ptr<sam::ArgumentBase>> args;
+  args.emplace_back(new sam::Argument<unsigned int>("oscillators", "N",
+                    "number oscillators", N, N_0));
+  args.emplace_back(new sam::Argument<double>("epsilon", "coupling", eps,
+                                              eps_0));
+  args.emplace_back(new sam::Argument<std::string>("filename", "output",
+                                                   filename, filename_0));
+
+    SECTION("set default values") {
+      int argc = 1;
+      char* argv[] = {"test"};
+      sam::ParseArguments(argc, argv, args);
+      CHECK(N == N_0);
+      CHECK(eps == Approx(eps_0).margin(0.01));
+      CHECK(filename == filename_0);
+    }
+
+    SECTION("set only one argument") {
+      int argc = 3;
+      char* argv[] = {"test", "-N", "50"};
+      sam::ParseArguments(argc, argv, args);
+      CHECK(N == 50);
+      CHECK(eps == Approx(eps_0).margin(0.01));
+      CHECK(filename == filename_0);
+    }
+
+    SECTION("set multiple arguments") {
+      int argc = 7;
+      char* argv[] = {"test", "-N", "50", "--filename", "b.csv",
+                      "--epsilon", "0.5"};
+      sam::ParseArguments(argc, argv, args);
+      CHECK(N == 50);
+      CHECK(eps == Approx(0.5).margin(0.01));
+      CHECK(filename == "b.csv");
+    }
+}
+
+TEST_CASE("double vector as argument", "[options]") {
+  std::vector<double> test_vector;
+  int argc = 4;
+  char* argv[] = {"test", "--N", "2.5", "32"};
+  std::vector<std::unique_ptr<sam::ArgumentBase>> args;
+  args.emplace_back(new sam::Argument<std::vector<double>>(
+      "N", "number oscillators", test_vector, std::vector<double>()));
+  sam::ParseArguments(argc, argv, args);
+  REQUIRE(test_vector.size() == 2);
+  CHECK(test_vector[0] == Approx(2.5).margin(0.01));
+  CHECK(test_vector[1] == Approx(32).margin(0.01));
+}
+
+TEST_CASE("double vector as argument default", "[options]") {
+  std::vector<double> test_vector;
+  int argc = 1;
+  char* argv[] = {"test"};
+  std::vector<std::unique_ptr<sam::ArgumentBase>> args;
+  args.emplace_back(new sam::Argument<std::vector<double>>(
+      "N", "number oscillators", test_vector, {1., 2.}));
+  sam::ParseArguments(argc, argv, args);
+  REQUIRE(test_vector.size() == 2);
+  CHECK(test_vector[0] == Approx(1).margin(0.01));
+  CHECK(test_vector[1] == Approx(2).margin(0.01));
+}
+
+TEST_CASE("unsigned vector as argument", "[options]") {
+  std::vector<unsigned int> test_vector;
+  int argc = 4;
+  char* argv[] = {"test", "--N", "2", "32"};
+  std::vector<std::unique_ptr<sam::ArgumentBase>> args;
+  args.emplace_back(new sam::Argument<std::vector<unsigned int>>(
+      "N", "number oscillators", test_vector, std::vector<unsigned int>()));
+  sam::ParseArguments(argc, argv, args);
+  REQUIRE(test_vector.size() == 2);
+  CHECK(test_vector[0] == 2);
+  CHECK(test_vector[1] == 32);
+}
