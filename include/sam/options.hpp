@@ -21,7 +21,7 @@ template<typename T>
 std::string to_string(const std::string& value) {
   return value;
 }
-}
+}  // namespace std
 
 namespace sam {
 template<typename T>
@@ -138,30 +138,6 @@ struct Argument: public ArgumentBase {
     return ValueAsStringHelper(value);
   }
 };
-
-
-/*
-
-*/
-// Specializations
-/*
-template<typename T> std::string Argument<std::string>
-::GetValueAsString() {
-  return value;
-}
-
-template<typename T> std::string Argument<std::vector<T>>
-::GetValueAsString() {
-  std::stringstream ss;
-  for (auto it = value.begin(); it != value.end(); ++it) {
-    ss << (*it);
-    if (it + 1 != value.end()) {
-      ss << ",";
-    }
-  }
-  return ss.str();
-}
-*/
 }  // namespace sam
 
 #endif  // INCLUDE_SAM_OPTIONS_HPP_
