@@ -33,3 +33,6 @@
 
 # CMAke build directory
 build
+
+# vs code
+.vscode
