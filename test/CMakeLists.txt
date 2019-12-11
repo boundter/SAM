@@ -6,13 +6,15 @@ target_link_libraries(test_main Catch)
 
 set(sources
   # odes
-  test_harmonic_oscillator_ode.cpp)
+  test_harmonic_oscillator_ode.cpp
+  # options
+  test_options.cpp)
 
 
 foreach (sourcefile ${sources})
   string(REPLACE ".cpp" "" sourcename ${sourcefile})
   add_executable(${sourcename} ${sourcefile})
   #target_link_libraries(${sourcename} sam)
-  target_link_libraries(${sourcename} test_main)
+  target_link_libraries(${sourcename} test_main ${Boost_LIBRARIES})
   add_test(${sourcename} ${sourcename})
 endforeach(sourcefile ${sources})
