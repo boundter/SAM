@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 project(sam CXX)
-set(CMAKE_BUILD_TYPE Release)
+
 
 # version string 0.1
 set(VERSION "0.1" CACHE STRING "version" FORCE)
@@ -24,6 +24,7 @@ include_directories(${NLOPT_INCLUDE_DIRS})
 
 #add_subdirectory(lib)
 include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/include)
 
 if(BUILD_TESTS)
   enable_testing()
