@@ -1,9 +1,11 @@
 // Copyright 2019 Erik Teichmann <kontakt.teichmann@gmail.com>
 
-#ifndef INCLUDE_SAM_OPTIONS_HPP_
-#define INCLUDE_SAM_OPTIONS_HPP_
+#ifndef SAM_OPTIONS_HPP_
+#define SAM_OPTIONS_HPP_
 
+#include <fstream>
 #include <iostream>
+#include <memory>
 #include <vector>
 #include <string>
 
@@ -195,6 +197,17 @@ class ParseArguments {
   }
 };
 
+
+void WriteArgumentsToFile(std::vector<std::unique_ptr<ArgumentBase>>& arguments,
+                          std::fstream& file) {
+  file << "#";
+  for (auto it = arguments.begin(); it != arguments.end(); ++it) {
+    file << " " << (*it)->GetName() << "=" << (*it)->GetValueAsString();
+  }
+  file << "\n";
+  file.flush();
+}
+
 }  // namespace sam
 
-#endif  // INCLUDE_SAM_OPTIONS_HPP_
+#endif  // SAM_OPTIONS_HPP_

@@ -1,10 +1,14 @@
 // Copyright 2019 Erik Teichmann <kontakt.teichmann@gmail.com>
 
+#include <cstdio>
+#include <fstream>
 #include <string>
 #include <vector>
 
 #include "test/catch.hpp"
 #include "sam/options.hpp"
+
+// TODO(boundter): Generate argv without throwing errors
 
 TEST_CASE("seting name of option", "[options]") {
   std::string name = "aa";
@@ -70,7 +74,7 @@ TEST_CASE("parsing arguments", "[options]") {
 
     SECTION("set default values") {
       int argc = 1;
-      char* argv[] = {"test"};
+      char* argv[] = {const_cast<char*>("test")};
       sam::ParseArguments(argc, argv, args);
       CHECK(N == N_0);
       CHECK(eps == Approx(eps_0).margin(0.01));
@@ -134,4 +138,35 @@ TEST_CASE("unsigned vector as argument", "[options]") {
   REQUIRE(test_vector.size() == 2);
   CHECK(test_vector[0] == 2);
   CHECK(test_vector[1] == 32);
+}
+
+TEST_CASE("write arguments to file", "[options]") {
+  unsigned int N, N_0 = 10;
+  double eps, eps_0 = 0.5;
+  std::string filename, filename_0 = "a.csv";
+  std::vector<double> foo, foo_0 = {1.5, 2.1};
+  std::vector<std::unique_ptr<sam::ArgumentBase>> args;
+  args.emplace_back(new sam::Argument<unsigned int>("oscillators", "N",
+                    "number oscillators", N, N_0));
+  args.emplace_back(new sam::Argument<double>("epsilon", "coupling", eps,
+                                              eps_0));
+  args.emplace_back(new sam::Argument<std::string>("filename", "output",
+                                                   filename, filename_0));
+  args.emplace_back(new sam::Argument<std::vector<double>>("foo", "some foo",
+                                                           foo, foo_0));
+  int argc = 10;
+  char* argv[] = {"test", "--oscillators", "50", "--filename", "a.csv",
+                  "--epsilon", "0.5", "--foo", "1.5", "2.1"};
+  std::string header = "# oscillators=50 epsilon=0.500000 filename=a.csv "
+                       "foo=1.5,2.1";
+  sam::ParseArguments(argc, argv, args);
+  std::fstream file("test_parser.csv", std::fstream::out);
+  sam::WriteArgumentsToFile(args, file);
+  file.close();
+  std::fstream infile("test_parser.csv", std::fstream::in);
+  std::string written;
+  std::getline(infile, written);
+  infile.close();
+  std::remove("test_parser.csv");
+  CHECK(written == header);
 }
