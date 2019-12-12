@@ -21,9 +21,8 @@ class HarmonicOscillatorODE {
    */
   explicit HarmonicOscillatorODE(double omega): omega_(omega) {}
 
-
   void operator()(const std::vector<double>& x, std::vector<double>& dx,
-      double t) {
+                  double t) {
     dx[0] = x[1];
     dx[1] = -omega_*omega_*x[0];
   }
