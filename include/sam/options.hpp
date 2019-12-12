@@ -1,7 +1,7 @@
 // Copyright 2019 Erik Teichmann <kontakt.teichmann@gmail.com>
 
-#ifndef SAM_OPTIONS_HPP_
-#define SAM_OPTIONS_HPP_
+#ifndef INCLUDE_SAM_OPTIONS_HPP_
+#define INCLUDE_SAM_OPTIONS_HPP_
 
 #include <fstream>
 #include <iostream>
@@ -153,51 +153,33 @@ struct Argument: public ArgumentBase {
   }
 };
 
+/*!
+  *  Parse the values from the command line arguments to the variables given as
+  *  Arguments. This also build the interface of the help message.
+  */
+void ParseArguments(int argc, char* argv[],
+                    std::vector<std::unique_ptr<ArgumentBase>>& arguments) {
+  boost::program_options::options_description desc("Allowed options");
+  desc.add_options()("help,h", "show this help message");
+  for (auto it = arguments.begin(); it != arguments.end(); ++it) {
+    (*it)->AddArgument(desc);
+  }
+  boost::program_options::variables_map vmap;
+  boost::program_options::store(
+    boost::program_options::parse_command_line(argc, argv, desc), vmap);
+  boost::program_options::notify(vmap);
+  if (vmap.count("help")) {
+    std::cout << desc;
+    exit(0);
+  }
+  for (auto it = arguments.begin(); it != arguments.end(); ++it) {
+    (*it)->ParseArgument(vmap);
+  }
+}
 
 /*!
- *  \brief Parse the command line arguments to variables.
+ * Write Arguments to the given file.
  */
-class ParseArguments {
- public:
-  std::vector<std::unique_ptr<ArgumentBase>>& arguments_;
-
-  /*!
-   *  Parse the values from the command line arguments to the variables given as
-   *  Arguments. This also build the interface of the help message.
-   */
-  ParseArguments(int& argc, char* argv[],
-                 std::vector<std::unique_ptr<ArgumentBase>>& arguments)
-      : arguments_(arguments) {
-    boost::program_options::options_description desc("Allowed options");
-    AddOptions(desc);
-    boost::program_options::variables_map vmap;
-    boost::program_options::store(
-      boost::program_options::parse_command_line(argc, argv, desc), vmap);
-    boost::program_options::notify(vmap);
-    Parse(desc, vmap);
-  }
-
- protected:
-  void AddOptions(boost::program_options::options_description& desc) {
-    desc.add_options()("help,h", "show this help message");
-    for (auto it = arguments_.begin(); it != arguments_.end(); ++it) {
-      (*it)->AddArgument(desc);
-    }
-  }
-
-  void Parse(boost::program_options::options_description& desc,
-             boost::program_options::variables_map& vmap) {
-    if (vmap.count("help")) {
-      std::cout << desc;
-      exit(0);
-    }
-    for (auto it = arguments_.begin(); it != arguments_.end(); ++it) {
-      (*it)->ParseArgument(vmap);
-    }
-  }
-};
-
-
 void WriteArgumentsToFile(std::vector<std::unique_ptr<ArgumentBase>>& arguments,
                           std::fstream& file) {
   file << "#";
@@ -210,4 +192,4 @@ void WriteArgumentsToFile(std::vector<std::unique_ptr<ArgumentBase>>& arguments,
 
 }  // namespace sam
 
-#endif  // SAM_OPTIONS_HPP_
+#endif  // INCLUDE_SAM_OPTIONS_HPP_
