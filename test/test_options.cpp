@@ -7,8 +7,7 @@
 
 #include "test/catch.hpp"
 #include "sam/options.hpp"
-
-// TODO(boundter): Generate argv without throwing errors
+#include "test/helper.hpp"
 
 TEST_CASE("seting name of option", "[options]") {
   std::string name = "aa";
@@ -83,7 +82,8 @@ TEST_CASE("parsing arguments", "[options]") {
 
     SECTION("set only one argument") {
       int argc = 3;
-      char* argv[] = {"test", "-N", "50"};
+      char* argv[argc+1];
+      FillArgv({"test", "-N", "50"}, argv);
       sam::ParseArguments(argc, argv, args);
       CHECK(N == 50);
       CHECK(eps == Approx(eps_0).margin(0.01));
@@ -92,8 +92,9 @@ TEST_CASE("parsing arguments", "[options]") {
 
     SECTION("set multiple arguments") {
       int argc = 7;
-      char* argv[] = {"test", "-N", "50", "--filename", "b.csv",
-                      "--epsilon", "0.5"};
+      char* argv[argc+1];
+      FillArgv({"test", "-N", "50", "--filename", "b.csv", "--epsilon", "0.5"},
+               argv);
       sam::ParseArguments(argc, argv, args);
       CHECK(N == 50);
       CHECK(eps == Approx(0.5).margin(0.01));
@@ -104,7 +105,8 @@ TEST_CASE("parsing arguments", "[options]") {
 TEST_CASE("double vector as argument", "[options]") {
   std::vector<double> test_vector;
   int argc = 4;
-  char* argv[] = {"test", "--N", "2.5", "32"};
+  char* argv[argc+1];
+  FillArgv({"test", "--N", "2.5", "32"}, argv);
   std::vector<std::unique_ptr<sam::ArgumentBase>> args;
   args.emplace_back(new sam::Argument<std::vector<double>>(
       "N", "number oscillators", test_vector, std::vector<double>()));
@@ -117,7 +119,8 @@ TEST_CASE("double vector as argument", "[options]") {
 TEST_CASE("double vector as argument default", "[options]") {
   std::vector<double> test_vector;
   int argc = 1;
-  char* argv[] = {"test"};
+  char* argv[argc+1];
+  FillArgv({"test"}, argv);
   std::vector<std::unique_ptr<sam::ArgumentBase>> args;
   args.emplace_back(new sam::Argument<std::vector<double>>(
       "N", "number oscillators", test_vector, {1., 2.}));
@@ -130,7 +133,8 @@ TEST_CASE("double vector as argument default", "[options]") {
 TEST_CASE("unsigned vector as argument", "[options]") {
   std::vector<unsigned int> test_vector;
   int argc = 4;
-  char* argv[] = {"test", "--N", "2", "32"};
+  char* argv[argc+1];
+  FillArgv({"test", "--N", "2", "32"}, argv);
   std::vector<std::unique_ptr<sam::ArgumentBase>> args;
   args.emplace_back(new sam::Argument<std::vector<unsigned int>>(
       "N", "number oscillators", test_vector, std::vector<unsigned int>()));
@@ -155,8 +159,9 @@ TEST_CASE("write arguments to file", "[options]") {
   args.emplace_back(new sam::Argument<std::vector<double>>("foo", "some foo",
                                                            foo, foo_0));
   int argc = 10;
-  char* argv[] = {"test", "--oscillators", "50", "--filename", "a.csv",
-                  "--epsilon", "0.5", "--foo", "1.5", "2.1"};
+  char* argv[argc+1];
+  FillArgv({"test", "--oscillators", "50", "--filename", "a.csv", "--epsilon",
+           "0.5", "--foo", "1.5", "2.1"}, argv);
   std::string header = "# oscillators=50 epsilon=0.500000 filename=a.csv "
                        "foo=1.5,2.1";
   sam::ParseArguments(argc, argv, args);
