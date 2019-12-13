@@ -28,4 +28,27 @@ class HarmonicOscillatorODE {
   }
 };
 
+class CoupledHarmonicOscillatorODE {
+ public:
+  double omega_1_;
+  double omega_2_;
+  double coupling_;
+
+  explicit CoupledHarmonicOscillatorODE(double omega_1, double omega_2,
+                                        double coupling)
+      : omega_1_(omega_1), omega_2_(omega_2), coupling_(coupling) {}
+
+  explicit CoupledHarmonicOscillatorODE(std::vector<double> omega,
+                                        double coupling)
+      : omega_1_(omega[0]), omega_2_(omega[1]), coupling_(coupling) {}
+
+  void operator()(const std::vector<double>& x, std::vector<double>& dx,
+                  double t) {
+    dx[0] = x[1];
+    dx[1] = -omega_1_*omega_1_*x[0] + coupling_*(x[3] - x[1]);
+    dx[2] = x[3];
+    dx[3] = -omega_2_*omega_2_*x[2] + coupling_*(x[1] - x[3]);
+  }
+};
+
 #endif  // TEST_HARMONIC_OSCILLATOR_ODE_HPP_
