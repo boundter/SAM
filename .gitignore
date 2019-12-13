@@ -36,3 +36,7 @@ build
 
 # vs code
 .vscode
+
+# doxygen
+doc/*
+!doc/Doxyfile
