@@ -26,6 +26,13 @@ include_directories(${NLOPT_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
+add_library(sam INTERFACE)
+target_include_directories(sam INTERFACE
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
+target_link_libraries(sam ${Boost_LIBARIES})
+
+
+
 if(BUILD_TESTS)
   enable_testing()
   add_subdirectory(test)
