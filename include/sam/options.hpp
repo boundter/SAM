@@ -30,7 +30,7 @@ std::string to_string(const std::string& value) {
 namespace sam {
 
 /*!
- * \brief Base struct for the definition of a vector holding all the arguments.
+ *  \brief Base struct for the definition of a vector holding all the arguments.
  */
 struct ArgumentBase {
   std::string short_name_;
@@ -39,9 +39,9 @@ struct ArgumentBase {
   std::string description_;
 
   /*!
-   *  @param long_name long name of the command line arguments.
-   *  @param short_name short name of the command line arguments.
-   *  @param description description of the command line argument.
+   *  @param long_name Long name of the command line arguments (with --).
+   *  @param short_name Short name of the command line arguments (with -).
+   *  @param description Description of the command line argument.
    */
   ArgumentBase(std::string long_name, std::string short_name,
                std::string description)
@@ -49,16 +49,31 @@ struct ArgumentBase {
         description_(description) {name_ = long_name + "," + short_name;}
 
   /*!
-   *  @param long_name long name of the command line arguments.
-   *  @param description description of the command line argument.
+   *  @param long_name Long name of the command line arguments (with --).
+   *  @param description Description of the command line argument.
    */
   ArgumentBase(std::string long_name, std::string description)
       : long_name_(long_name), name_(long_name), description_(description) {}
 
+  /*!
+   *  Adds the arguments to the description.
+   */
   virtual void AddArgument(boost::program_options::options_description& desc) {}
+
+  /*!
+   *  Parse the arguments and save the value to the variable. If no value was
+   *  passed it will set the default value.
+   */
   virtual void ParseArgument(boost::program_options::variables_map& vmap) {}
+
+  /*!
+   *  Convert the value to a string for printing.
+   */
   virtual std::string GetValueAsString() {return std::string();}
 
+  /*!
+   *  Get the long name of the argument.
+   */
   std::string GetName() {
     return long_name_;
   }
@@ -67,6 +82,10 @@ struct ArgumentBase {
 
 /*!
  * \brief Struct to hold the command line arguments.
+ *
+ *  The value of the argument will be saved to a given variable of the
+ *  appropriate type. If the argument is not specified on the command line the
+ *  value will be filled by some given default.
  */
 template<typename T>
 struct Argument: public ArgumentBase {
@@ -74,10 +93,10 @@ struct Argument: public ArgumentBase {
   T default_value_;
 
   /*!
-   *  @param long_name long name of the command line arguments.
-   *  @param description description of the command line argument.
-   *  @param value variable holding the argument.
-   *  @param default_value default_value of the argument.
+   *  @param long_name Long name of the command line arguments.
+   *  @param description Description of the command line argument.
+   *  @param value Variable holding the argument.
+   *  @param default_value Default value of the argument.
    */
   Argument(std::string long_name, std::string description, T& value,
            T default_value)
@@ -85,11 +104,11 @@ struct Argument: public ArgumentBase {
         default_value_(default_value) {}
 
   /*!
-   *  @param long_name long name of the command line arguments.
-   *  @param short_name short name of the command line arguments.
-   *  @param description description of the command line argument.
-   *  @param value variable holding the argument.
-   *  @param default_value default_value of the argument.
+   *  @param long_name Long name of the command line arguments.
+   *  @param short_name Short name of the command line arguments.
+   *  @param description Description of the command line argument.
+   *  @param value Variable holding the argument.
+   *  @param default_value Default value of the argument.
    */
   Argument(std::string long_name, std::string short_name,
            std::string description, T& value, T default_value)
@@ -100,6 +119,8 @@ struct Argument: public ArgumentBase {
    *  Adds the arguments to the description.
    */
   void AddArgument(boost::program_options::options_description& desc) {
+    // Helper function to differentiate between the handling of values and
+    // vectors.
     AddArgumentHelper(default_value_, desc);
   }
 
@@ -113,7 +134,12 @@ struct Argument: public ArgumentBase {
     }
   }
 
+  /*!
+   *  Convert the value to a string for printing.
+   */
   std::string GetValueAsString() {
+    // Helper function to differentiate between the handling of values and
+    // vectors.
     return ValueAsStringHelper(value_);
   }
 
@@ -155,7 +181,13 @@ struct Argument: public ArgumentBase {
 
 /*!
   *  Parse the values from the command line arguments to the variables given as
-  *  Arguments. This also build the interface of the help message.
+  *  Arguments. This also build the interface of the help message. Should
+  *  options be given that not exist in the arguments list an error will be
+  *  thrown.
+  *
+  *  @param argc The total number of command line arguments.
+  *  @param argv The given command line arguments.
+  *  @param arguments The whole list of possible arguments.
   */
 void ParseArguments(int argc, char* argv[],
                     std::vector<std::unique_ptr<ArgumentBase>>& arguments) {
@@ -178,7 +210,10 @@ void ParseArguments(int argc, char* argv[],
 }
 
 /*!
- * Write Arguments to the given file.
+ *  Write the arguments to the given file. The arguments will be written on a
+ *  single line starting with a #. They are written in the form long_name=value
+ *  and are separated by a space. Single values of a vector are separated by a
+ *  comma.
  */
 void WriteArgumentsToFile(std::vector<std::unique_ptr<ArgumentBase>>& arguments,
                           std::fstream& file) {
