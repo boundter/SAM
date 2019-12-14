@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "test/catch.hpp"
-#include "sam/options.hpp"
+#include "sam/option.hpp"
 #include "test/helper.hpp"
 
 TEST_CASE("seting name of option", "[options]") {
