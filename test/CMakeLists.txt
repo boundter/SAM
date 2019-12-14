@@ -10,6 +10,8 @@ set(sources
   test_rk4_system.cpp
   # odes
   test_harmonic_oscillator_ode.cpp
+  #observers
+  test_position_observer.cpp
   # options
   test_options.cpp)
 

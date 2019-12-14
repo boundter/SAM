@@ -8,9 +8,9 @@
 #include <boost/numeric/odeint/stepper/runge_kutta4.hpp>
 #include <boost/numeric/odeint/integrate/check_adapter.hpp>
 #include <boost/numeric/odeint/integrate/integrate_n_steps.hpp>
+#include <boost/numeric/odeint/integrate/null_observer.hpp>
 
 #include <sam/system/generic_system.hpp>
-#include <sam/observer/base_observer.hpp>
 
 namespace sam {
 
@@ -22,13 +22,14 @@ class RK4System: public GenericSystem<ODE, state_type> {
             Ts... parameters)
       : GenericSystem<ODE, state_type>(system_size, dimension, parameters...) {}
 
+  template<typename observer_type = boost::numeric::odeint::null_observer>
   void Integrate(double dt, unsigned int number_steps,
-                 std::shared_ptr<BaseObserver<state_type>> observer
-                     = std::make_shared<BaseObserver<state_type>>()) {
+                 observer_type observer
+                     = boost::numeric::odeint::null_observer()) {
       this->t_ = boost::numeric::odeint::integrate_n_steps(
           stepper_, *(this->ode_), this->x_, this->t_, dt, number_steps,
-          *observer.get());
-    }
+          observer);
+  }
 
  private:
   boost::numeric::odeint::runge_kutta4<state_type> stepper_;

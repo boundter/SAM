@@ -6,13 +6,12 @@
 #include <stdexcept>  // length_error,
 #include <vector>
 
-#include <sam/observer/base_observer.hpp>
-
 namespace sam {
 
 /*!
  * A wrapper for ODEs. It is especially useful for integrating coupled
- * differential equations.
+ * differential equations. Be careful: Integration does not support
+ * polymorphism.
  */
 template<typename ODE, typename state_type = std::vector<double>>
 class GenericSystem {
@@ -74,15 +73,18 @@ class GenericSystem {
   /*!
    * \brief Integrate the system whith an observer.
    *
-   * The observer is a user-specified struct/class(/function?) that
-   * receives the current time and state. If none is specified the
-   * null_observer will be used which does nothing.
+   * Integrate the system whith an observer. The observer is a user-specified
+   * struct/class that receives the current time and state. If none is
+   * specified the null_observer will be used which does nothing.
    *
-   * The pointer to member ode needs to be dereferenced here, this will
-   * always be to the template parameter ODE.
+   * @param dt Timestep for the integration.
+   * @param number_steps The total number of timesteps.
+   * @param observer The observer of the integration. The observer will be
+   *  called after every timestep with the current position and time.
    */
-  virtual void Integrate(double dt, unsigned int number_steps,
-                         std::shared_ptr<BaseObserver<state_type>> observer) {}
+  template<typename observer_type>
+  void Integrate(double dt, unsigned int number_steps,
+                 observer_type observer) {}
 
 //   /*!
 //     * \brief Return the position in the state space in phases for all elements.
