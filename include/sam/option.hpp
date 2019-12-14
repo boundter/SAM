@@ -1,7 +1,7 @@
 // Copyright 2019 Erik Teichmann <kontakt.teichmann@gmail.com>
 
-#ifndef INCLUDE_SAM_OPTIONS_HPP_
-#define INCLUDE_SAM_OPTIONS_HPP_
+#ifndef INCLUDE_SAM_OPTION_HPP_
+#define INCLUDE_SAM_OPTION_HPP_
 
 #include <fstream>
 #include <iostream>

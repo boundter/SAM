@@ -7,6 +7,7 @@ target_link_libraries(test_main Catch sam)
 set(sources
   #systems
   test_generic_system.cpp
+  test_rk4_system.cpp
   # odes
   test_harmonic_oscillator_ode.cpp
   # options

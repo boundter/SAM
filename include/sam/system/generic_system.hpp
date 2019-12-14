@@ -1,21 +1,15 @@
 // Copyright 2019 Erik Teichmann <kontakt.teichmann@gmail.com>
 
-#ifndef INCLUDE_SAM_SYSTEMS_GENERIC_SYSTEM_HPP_
-#define INCLUDE_SAM_SYSTEMS_GENERIC_SYSTEM_HPP_
+#ifndef INCLUDE_SAM_SYSTEM_GENERIC_SYSTEM_HPP_
+#define INCLUDE_SAM_SYSTEM_GENERIC_SYSTEM_HPP_
 
-#include <memory>  // unique_ptr
 #include <stdexcept>  // length_error,
 #include <vector>
 
-#include <boost/numeric/odeint/integrate/null_observer.hpp>
-#include <boost/numeric/odeint/stepper/runge_kutta4.hpp>
-#include <boost/numeric/odeint/integrate/check_adapter.hpp>
-#include <boost/numeric/odeint/integrate/integrate_n_steps.hpp>
-
-
-// TODO(boundter): Change Integration
+#include <sam/observer/base_observer.hpp>
 
 namespace sam {
+
 /*!
  * A wrapper for ODEs. It is especially useful for integrating coupled
  * differential equations.
@@ -39,7 +33,6 @@ class GenericSystem {
     ode_ = std::unique_ptr<ODE>(new ODE(parameters...));
   }
 
-
   /*!
    *  \brief Return the position in the state space for all elements.
    */
@@ -62,6 +55,12 @@ class GenericSystem {
     x_ = new_position;
   }
 
+  /*!
+   *  \brief Get the time of the system.
+   */
+  double GetTime() {
+    return t_;
+  }
 
   /*!
    *  \brief Return the derivative at the current position at time.
@@ -72,6 +71,18 @@ class GenericSystem {
     return intermediate;
   }
 
+  /*!
+   * \brief Integrate the system whith an observer.
+   *
+   * The observer is a user-specified struct/class(/function?) that
+   * receives the current time and state. If none is specified the
+   * null_observer will be used which does nothing.
+   *
+   * The pointer to member ode needs to be dereferenced here, this will
+   * always be to the template parameter ODE.
+   */
+  virtual void Integrate(double dt, unsigned int number_steps,
+                         std::shared_ptr<BaseObserver<state_type>> observer) {}
 
 //   /*!
 //     * \brief Return the position in the state space in phases for all elements.
@@ -112,12 +123,6 @@ class GenericSystem {
 //   }
 
 
-//   /*!
-//     *  \brief Get the time of the system.
-//     */
-//   double GetTime() {
-//     return t_;
-//   }
 
 
 //   /*!
@@ -150,26 +155,6 @@ class GenericSystem {
 //   }
 
 
-//   /*!
-//     * \brief Integrate the system whith an observer.
-//     *
-//     * The observer is a user-specified struct/class(/function?) that
-//     * receives the current time and state. If none is specified the
-//     * null_observer will be used which does nothing.
-//     *
-//     * The pointer to member ode needs to be dereferenced here, this will
-//     * always be to the template parameter ODE.
-//     */
-//   template <typename observer_type = boost::numeric::odeint::null_observer>
-//   void Integrate(double dt, unsigned int number_steps,
-//                  observer_type observer
-//                      = boost::numeric::odeint::null_observer()) {
-//       this->t_ = boost::numeric::odeint::integrate_n_steps(stepper_,
-//                                                            *(this->ode_),
-//                                                            this->x_, this->t_,
-//                                                            dt, number_steps,
-//                                                            observer);
-//     }
 
 
 //   // TODO(boundter): Check for NULL-Pointer
@@ -408,4 +393,4 @@ class GenericSystem {
 
 }  // namespace sam
 
-#endif  // INCLUDE_SAM_SYSTEMS_GENERIC_SYSTEM_HPP_
+#endif  // INCLUDE_SAM_SYSTEM_GENERIC_SYSTEM_HPP_
