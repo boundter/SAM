@@ -24,11 +24,11 @@ template<typename ODE, typename state_type = std::vector<double>>
 class GenericSystem {
  public:
   /*!
-    *  Initialzer for the GenericSystem class.
-    *  @param system_size Number of elements in the system.
-    *  @param dimension Number of ODEs per element.
-    *  @param parameters All the parameters that need to be passed to the ODE.
-    */
+   *  Initialzer for the GenericSystem class.
+   *  @param system_size Number of elements in the system.
+   *  @param dimension Number of ODEs per element.
+   *  @param parameters All the parameters that need to be passed to the ODE.
+   */
   template<typename ...Ts>
   GenericSystem(unsigned int system_size, unsigned int dimension,
                 Ts... parameters) {
@@ -41,16 +41,31 @@ class GenericSystem {
 
 
   /*!
-    *  \brief Return the position in the state space for all elements.
-    */
+   *  \brief Return the position in the state space for all elements.
+   */
   state_type GetPosition() {
     return x_;
   }
 
+  /*!
+   *  \brief Set the position in the state space.
+   *
+   *  Set the new position in the state space. If the new position has the
+   *  wrong size an exception will be thrown.
+   *
+   *  @throws std::length_error
+   */
+  void SetPosition(const state_type& new_position) {
+    if (new_position.size() != N_*d_) {
+      throw std::length_error("Trying to set new position of wrong length!");
+    }
+    x_ = new_position;
+  }
+
 
   /*!
-    *  \brief Return the derivative at the current position at time.
-    */
+   *  \brief Return the derivative at the current position at time.
+   */
   state_type GetDerivative() {
     state_type intermediate(x_.size());
     ode_->operator()(x_, intermediate, t_);
@@ -85,20 +100,7 @@ class GenericSystem {
 //   }
 
 
-  /*!
-    *  \brief Set the position in the state space.
-    *
-    *  Set the new position in the state space. If the new position has the
-    *  wrong size an exception will be thrown.
-    *
-    *  @throws std::length_error
-    */
-  void SetPosition(const state_type& new_position) {
-    if (new_position.size() != N_*d_) {
-      throw std::length_error("Trying to set new position of wrong length!");
-    }
-    x_ = new_position;
-  }
+
 
 
 //   /*!

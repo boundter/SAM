@@ -5,7 +5,7 @@
 
 #include "test/catch.hpp"
 #include "test/harmonic_oscillator_ode.hpp"
-#include "include/sam/systems/generic_system.hpp"
+#include "include/sam/system/generic_system.hpp"
 
 TEST_CASE("simple system", "[generic_system]") {
   double omega = 2.;
