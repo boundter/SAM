@@ -96,23 +96,44 @@ TEST_CASE("ODE with multiple parameters", "[generic_system]") {
   unsigned int dimension = 2;
 
   SECTION("multiple parameters of same type") {
-    // TODO(boundter): Check if correctly set
-    REQUIRE_NOTHROW(sam::GenericSystem<CoupledHarmonicOscillatorODE>(
-                        N, dimension, omega_1, omega_2, coupling));
+    sam::GenericSystem<CoupledHarmonicOscillatorODE> system(
+        N, dimension, omega_1, omega_2, coupling);
+    std::vector<double> position = {1., 2., 4., 5.};
+    system.SetPosition(position);
+    std::vector<double> derivative = system.GetDerivative();
+    REQUIRE(derivative.size() == 4);
+    CHECK(derivative[0] == Approx(position[1]).margin(0.01));
+    CHECK(derivative[1] == Approx(-2.5).margin(0.01));
+    CHECK(derivative[2] == Approx(position[3]).margin(0.01));
+    CHECK(derivative[3] == Approx(-37.5).margin(0.01));
   }
 
   SECTION("multiple parameters of different types") {
-    // TODO(boundter): Check if correctly set
-    REQUIRE_NOTHROW(sam::GenericSystem<CoupledHarmonicOscillatorODE>(
-                        N, dimension, omega, coupling));
+    sam::GenericSystem<CoupledHarmonicOscillatorODE> system(
+        N, dimension, omega, coupling);
+    std::vector<double> position = {1., 2., 4., 5.};
+    system.SetPosition(position);
+    std::vector<double> derivative = system.GetDerivative();
+    REQUIRE(derivative.size() == 4);
+    CHECK(derivative[0] == Approx(position[1]).margin(0.01));
+    CHECK(derivative[1] == Approx(-2.5).margin(0.01));
+    CHECK(derivative[2] == Approx(position[3]).margin(0.01));
+    CHECK(derivative[3] == Approx(-37.5).margin(0.01));
   }
 
   SECTION("change parameters") {
-    // TODO(boundter): Check if correctly set
     std::vector<double> new_omega({4., 6.});
     double new_coupling = 0.;
     sam::GenericSystem<CoupledHarmonicOscillatorODE> system(
         N, dimension, omega, coupling);
     REQUIRE_NOTHROW(system.SetParameters(new_omega, new_coupling));
+    std::vector<double> position = {1., 2., 4., 5.};
+    system.SetPosition(position);
+    std::vector<double> derivative = system.GetDerivative();
+    REQUIRE(derivative.size() == 4);
+    CHECK(derivative[0] == Approx(position[1]).margin(0.01));
+    CHECK(derivative[1] == Approx(-16).margin(0.01));
+    CHECK(derivative[2] == Approx(position[3]).margin(0.01));
+    CHECK(derivative[3] == Approx(-144).margin(0.01));
   }
 }
