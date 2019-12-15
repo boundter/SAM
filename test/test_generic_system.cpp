@@ -137,3 +137,37 @@ TEST_CASE("ODE with multiple parameters", "[generic_system]") {
     CHECK(derivative[3] == Approx(-144).margin(0.01));
   }
 }
+
+TEST_CASE("position in spherical coordinates 1d", "[generic_system]") {
+  // use HarmonicOscillator as dummy ODE but with dimension 1
+  double omega = 1;
+  unsigned int N = 3;
+  unsigned int d = 1;
+  sam::GenericSystem<HarmonicOscillatorODE> system(N, d, omega);
+  std::vector<double> x = {1., 2., 3.};
+  system.SetPosition(x);
+  std::vector<double> spherical = system.GetPositionSpherical();
+  REQUIRE(spherical.size() == x.size());
+  CHECK(spherical[0] == Approx(x[0]).margin(0.01));
+  CHECK(spherical[1] == Approx(x[1]).margin(0.01));
+  CHECK(spherical[2] == Approx(x[2]).margin(0.01));
+}
+
+TEST_CASE("position in spherical coordinates 2d", "[generic_system]") {
+  // use HarmonicOscillatorODE as a dummy ODE with dimensionality 2
+  double omega = 1;
+  unsigned int N = 3;
+  unsigned int d = 2;
+  sam::GenericSystem<HarmonicOscillatorODE> system(N, d, omega);
+  std::vector<double> x = {1., 2., 3., 4., 5., -6.};
+  std::vector<double> analytical = {2.236, 1.107, 5, 0.927, 7.81, 5.407};
+  system.SetPosition(x);
+  std::vector<double> spherical = system.GetPositionSpherical();
+  REQUIRE(spherical.size() == analytical.size());
+  CHECK(spherical[0] == Approx(analytical[0]).margin(0.1));
+  CHECK(spherical[1] == Approx(analytical[1]).margin(0.1));
+  CHECK(spherical[2] == Approx(analytical[2]).margin(0.1));
+  CHECK(spherical[3] == Approx(analytical[3]).margin(0.1));
+  CHECK(spherical[4] == Approx(analytical[4]).margin(0.1));
+  CHECK(spherical[5] == Approx(analytical[5]).margin(0.1));
+}

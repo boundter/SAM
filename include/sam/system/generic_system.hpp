@@ -6,6 +6,8 @@
 #include <stdexcept>  // length_error,
 #include <vector>
 
+#include <sam/helper/coordinate_helper.hpp>
+
 namespace sam {
 
 /*!
@@ -109,43 +111,28 @@ class GenericSystem {
     ode_ = std::make_unique<ODE>(parameters...);
   }
 
-//   /*!
-//     * \brief Return the position in the state space in phases for all elements.
-//     *
-//     * Calculates the coordinates on a sphere of the same dimension as
-//     * the phase space. If the dimension is 1, the corrdinates will be wrapped
-//     * around the unit circle as phases, otherise the first coordinate of every
-//     * element is the radius and the later ones are the phases.
-//     * Careful: in 3-d this is not the same as spherical coordinates with polar
-//     * angle and azimuth!
-//     */
-//   state_type GetPositionSpherical() {
-//     if (d_ == 1) {
-//       return x_;
-//     } else {
-//       state_type spherical;
-//       /*
-//       for (unsigned int i = 0; i < N_; ++i) {
-//         state_type coord = CartesianToSpherical<state_type>(
-//             x_.begin() + i*d_, x_.begin() + (i+1)*d_);
-//         spherical.insert(spherical.end(), coord.begin(), coord.end());
-//       }
-//       */
-//       return spherical;
-//     }
-//   }
-
-
-
-
-
-
-
-
-
-
-
-
+  /*!
+   * \brief Transform cartesian coordinates into hyperspherical ones.
+   *
+   * Calculates the coordinates on a sphere of the same dimension as
+   * the phase space. If the dimension is 1, the corrdinates will be wrapped
+   * around the unit circle. The first coordinate is the radius and the later
+   * ones are the phases. Careful: in 3-d this is not the same as spherical
+   * coordinates with polar angle and azimuth!
+   */
+  state_type GetPositionSpherical() {
+    if (d_ == 1) {
+      return x_;
+    } else {
+      state_type spherical;
+      for (unsigned int i = 0; i < N_; ++i) {
+        state_type coord = CartesianToSpherical<state_type>(
+            x_.begin() + i*d_, x_.begin() + (i+1)*d_);
+        spherical.insert(spherical.end(), coord.begin(), coord.end());
+      }
+      return spherical;
+    }
+  }
 
 //   /*!
 //     *  \brief Returns the average position of all elements in the state
