@@ -29,7 +29,7 @@ class GenericSystem {
     d_ = dimension;
     x_.resize(N_*d_);
     t_ = 0.;
-    ode_ = std::unique_ptr<ODE>(new ODE(parameters...));
+    ode_ = std::make_unique<ODE>(parameters...);
   }
 
   /*!
@@ -86,6 +86,29 @@ class GenericSystem {
   void Integrate(double dt, unsigned int number_steps,
                  observer_type observer) {}
 
+  /*!
+   * \brief Change the number of oscillators.
+   *
+   * Change the number of oscillators in the system. No new ODE object will be
+   * generated, so if ti depends on the number of oscillattors the parameters
+   * will have to be changed afterwards.
+   *
+   * @param N The new number of oscillators.
+   */
+  void Resize(unsigned int N) {
+    N_ = N;
+    x_.resize(N_*d_);
+  }
+
+  /*!
+   *  \brief Set the parameters for the ODE. This creates a new pointer
+   *  to the ODE.
+   */
+  template<typename ...Ts>
+  void SetParameters(Ts... parameters) {
+    ode_ = std::make_unique<ODE>(parameters...);
+  }
+
 //   /*!
 //     * \brief Return the position in the state space in phases for all elements.
 //     *
@@ -116,24 +139,12 @@ class GenericSystem {
 
 
 
-//   /*!
-//     * \brief Change the number of oscillators.
-//     */
-//   void Resize(unsigned int N) {
-//     N_ = N;
-//     x_.resize(N_*d_);
-//   }
 
 
 
 
-//   /*!
-//     *  \brief Set the parameters for the ODE. This creates a new pointer
-//     *  to the ODE.
-//     */
-//   void SetParameters(void* parameters) {
-//     ode_ = std::unique_ptr<ODE>(new ODE(parameters));
-//   }
+
+
 
 
 //   /*!
