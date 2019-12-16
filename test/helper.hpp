@@ -8,9 +8,14 @@
 
 void FillArgv(std::vector<std::string> args, char* argv[]) {
   for (unsigned int i = 0; i < args.size(); ++i) {
-    argv[i] = const_cast<char*>(args[i].data());
+    // simply casting the data like
+    // argv[i] = const_cast<char*>(args[i].data());
+    // leads to freeing of args and the char* are dangling pointers
+    argv[i] = new char[args[i].size()+1];
+    args[i].copy(argv[i], args[i].size()+1);
+    argv[i][args[i].size()] = '\0';
   }
-  argv[args.size()+1] = NULL;
+  argv[args.size()+1] = nullptr;
 }
 
 #endif  // TEST_HELPER_HPP_
