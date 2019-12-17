@@ -8,6 +8,7 @@ set(sources
   #systems
   test_generic_system.cpp
   test_rk4_system.cpp
+  test_euler_system.cpp
   # odes
   test_harmonic_oscillator_ode.cpp
   #observers

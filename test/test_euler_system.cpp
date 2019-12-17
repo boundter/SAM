@@ -4,7 +4,7 @@
 
 #include "test/catch.hpp"
 #include "test/harmonic_oscillator_ode.hpp"
-#include "include/sam/system/rk4_system.hpp"
+#include "include/sam/system/euler_system.hpp"
 #include "include/sam/observer/position_observer.hpp"
 
 TEST_CASE("integrate simple system") {
@@ -19,7 +19,7 @@ TEST_CASE("integrate simple system") {
   unsigned int n = 100;
   double t = dt*static_cast<double>(n);
   std::vector<double> initial_condition({0., 1.});
-  sam::RK4System<HarmonicOscillatorODE> system(N, dimension, omega);
+  sam::EulerSystem<HarmonicOscillatorODE> system(N, dimension, omega);
   system.SetPosition(initial_condition);
 
   SECTION("integrate without observer") {
