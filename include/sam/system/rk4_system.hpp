@@ -18,8 +18,8 @@ template<typename ODE, typename state_type = std::vector<double>>
 class RK4System: public GenericSystem<ODE, state_type> {
  public:
   template<typename... Ts>
-  RK4System(unsigned int system_size, unsigned int dimension,
-            Ts... parameters)
+  explicit RK4System(unsigned int system_size, unsigned int dimension,
+                     Ts... parameters)
       : GenericSystem<ODE, state_type>(system_size, dimension, parameters...) {}
 
   template<typename observer_type = boost::numeric::odeint::null_observer>

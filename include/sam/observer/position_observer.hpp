@@ -12,7 +12,7 @@ struct PositionObserver {
   std::vector<state_type>& position_;
   std::vector<double>& time_;
 
-  PositionObserver(std::vector<state_type>& position,
+  explicit PositionObserver(std::vector<state_type>& position,
                    std::vector<double>& time)
       : position_(position), time_(time) {}
 

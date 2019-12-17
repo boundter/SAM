@@ -25,8 +25,8 @@ class GenericSystem {
    *  @param parameters All the parameters that need to be passed to the ODE.
    */
   template<typename ...Ts>
-  GenericSystem(unsigned int system_size, unsigned int dimension,
-                Ts... parameters) {
+  explicit GenericSystem(unsigned int system_size, unsigned int dimension,
+                         Ts... parameters) {
     N_ = system_size;
     d_ = dimension;
     x_.resize(N_*d_);
@@ -37,7 +37,7 @@ class GenericSystem {
   /*!
    *  \brief Return the position in the state space for all elements.
    */
-  state_type GetPosition() {
+  state_type GetPosition() const {
     return x_;
   }
 
@@ -59,14 +59,14 @@ class GenericSystem {
   /*!
    *  \brief Get the time of the system.
    */
-  double GetTime() {
+  double GetTime() const {
     return t_;
   }
 
   /*!
    *  \brief Return the derivative at the current position at time.
    */
-  state_type GetDerivative() {
+  state_type GetDerivative() const {
     state_type intermediate(x_.size());
     ode_->operator()(x_, intermediate, t_);
     return intermediate;
@@ -120,7 +120,7 @@ class GenericSystem {
    * ones are the phases. Careful: in 3-d this is not the same as spherical
    * coordinates with polar angle and azimuth!
    */
-  state_type GetPositionSpherical() {
+  state_type GetPositionSpherical() const {
     if (d_ == 1) {
       return x_;
     } else {
