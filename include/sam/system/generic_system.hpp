@@ -26,20 +26,12 @@ class GenericSystem {
    */
   template<typename ...Ts>
   explicit GenericSystem(unsigned int system_size, unsigned int dimension,
-                         Ts... parameters) {
-    N_ = system_size;
-    d_ = dimension;
-    x_.resize(N_*d_);
-    t_ = 0.;
-    ode_ = std::make_unique<ODE>(parameters...);
-  }
+                         Ts... parameters);
 
   /*!
    *  \brief Return the position in the state space for all elements.
    */
-  state_type GetPosition() const {
-    return x_;
-  }
+  state_type GetPosition() const;
 
   /*!
    *  \brief Set the position in the state space.
@@ -49,28 +41,17 @@ class GenericSystem {
    *
    *  @throws std::length_error
    */
-  void SetPosition(const state_type& new_position) {
-    if (new_position.size() != N_*d_) {
-      throw std::length_error("Trying to set new position of wrong length!");
-    }
-    x_ = new_position;
-  }
+  void SetPosition(const state_type& new_position);
 
   /*!
    *  \brief Get the time of the system.
    */
-  double GetTime() const {
-    return t_;
-  }
+  double GetTime() const;
 
   /*!
    *  \brief Return the derivative at the current position at time.
    */
-  state_type GetDerivative() const {
-    state_type intermediate(x_.size());
-    ode_->operator()(x_, intermediate, t_);
-    return intermediate;
-  }
+  state_type GetDerivative() const;
 
   /*!
    * \brief Integrate the system whith an observer.
@@ -97,19 +78,14 @@ class GenericSystem {
    *
    * @param N The new number of oscillators.
    */
-  void Resize(unsigned int N) {
-    N_ = N;
-    x_.resize(N_*d_);
-  }
+  void Resize(unsigned int N);
 
   /*!
    *  \brief Set the parameters for the ODE. This creates a new pointer
    *  to the ODE.
    */
   template<typename ...Ts>
-  void SetParameters(Ts... parameters) {
-    ode_ = std::make_unique<ODE>(parameters...);
-  }
+  void SetParameters(Ts... parameters);
 
   /*!
    * \brief Transform cartesian coordinates into hyperspherical ones.
@@ -120,19 +96,7 @@ class GenericSystem {
    * ones are the phases. Careful: in 3-d this is not the same as spherical
    * coordinates with polar angle and azimuth!
    */
-  state_type GetPositionSpherical() const {
-    if (d_ == 1) {
-      return x_;
-    } else {
-      state_type spherical;
-      for (unsigned int i = 0; i < N_; ++i) {
-        state_type coord = CartesianToSpherical<state_type>(
-            x_.begin() + i*d_, x_.begin() + (i+1)*d_);
-        spherical.insert(spherical.end(), coord.begin(), coord.end());
-      }
-      return spherical;
-    }
-  }
+  state_type GetPositionSpherical() const;
 
 //   /*!
 //     *  \brief Returns the average position of all elements in the state
@@ -390,6 +354,73 @@ class GenericSystem {
 //     return period/static_cast<double>(times_of_crossing.size()-1);
 //   }
 };
+
+// Implementation
+
+template<typename ODE, typename state_type>
+template<typename... Ts>
+GenericSystem<ODE, state_type>::GenericSystem(unsigned int system_size,
+                                              unsigned int dimension,
+                                              Ts... parameters) {
+  N_ = system_size;
+  d_ = dimension;
+  x_.resize(N_*d_);
+  t_ = 0.;
+  ode_ = std::make_unique<ODE>(parameters...);
+}
+
+template<typename ODE, typename state_type>
+state_type GenericSystem<ODE, state_type>::GetPosition() const {
+  return x_;
+}
+
+template<typename ODE, typename state_type>
+void GenericSystem<ODE, state_type>::SetPosition(
+      const state_type& new_position) {
+  if (new_position.size() != N_*d_) {
+    throw std::length_error("Trying to set new position of wrong length!");
+  }
+  x_ = new_position;
+}
+
+template<typename ODE, typename state_type>
+double GenericSystem<ODE, state_type>::GetTime() const {
+  return t_;
+}
+
+template<typename ODE, typename state_type>
+state_type GenericSystem<ODE, state_type>::GetDerivative() const {
+  state_type intermediate(x_.size());
+  ode_->operator()(x_, intermediate, t_);
+  return intermediate;
+}
+
+template<typename ODE, typename state_type>
+void GenericSystem<ODE, state_type>::Resize(unsigned int N) {
+  N_ = N;
+  x_.resize(N_*d_);
+}
+
+template<typename ODE, typename state_type>
+template<typename... Ts>
+void GenericSystem<ODE, state_type>::SetParameters(Ts... parameters) {
+  ode_ = std::make_unique<ODE>(parameters...);
+}
+
+template<typename ODE, typename state_type>
+state_type GenericSystem<ODE, state_type>::GetPositionSpherical() const {
+  if (d_ == 1) {
+    return x_;
+  } else {
+    state_type spherical;
+    for (unsigned int i = 0; i < N_; ++i) {
+      state_type coord = CartesianToSpherical<state_type>(
+          x_.begin() + i*d_, x_.begin() + (i+1)*d_);
+      spherical.insert(spherical.end(), coord.begin(), coord.end());
+    }
+    return spherical;
+  }
+}
 
 }  // namespace sam
 
