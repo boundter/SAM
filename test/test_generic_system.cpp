@@ -171,3 +171,58 @@ TEST_CASE("position in spherical coordinates 2d", "[generic_system]") {
   CHECK(spherical[4] == Approx(analytical[4]).margin(0.1));
   CHECK(spherical[5] == Approx(analytical[5]).margin(0.1));
 }
+
+TEST_CASE("mean field in 2d with 2 oscillators", "[generic_system]") {
+  // use HarmonicOscillatorODE as a dummy ODE with dimensionality 2
+  double omega = 1;
+  unsigned int N = 2;
+  unsigned int d = 2;
+  sam::GenericSystem<HarmonicOscillatorODE> system(N, d, omega);
+  std::vector<double> initial_condition = {0., 5., 1., -2.5};
+  std::vector<double> analytical =  {0.5, 1.25};
+  system.SetPosition(initial_condition);
+  std::vector<double> numerical = system.CalculateMeanField();
+  REQUIRE(numerical.size() == analytical.size());
+  CHECK(numerical[0] == Approx(analytical[0]).margin(0.01));
+  CHECK(numerical[1] == Approx(analytical[1]).margin(0.01));
+}
+
+TEST_CASE("spherical mean field in 1d", "[generic_system]") {
+  // ODE will not be used, HarmonicOscillator as dummy
+  double omega = 1.;
+  sam::GenericSystem<HarmonicOscillatorODE> system(5, 1, omega);
+  std::vector<double> x = {0., 0., 3*M_PI, 3*M_PI, M_PI/2.};
+  std::vector<double> analytical = {0.2, M_PI/2.};
+  system.SetPosition(x);
+  std::vector<double> spherical = system.CalculateMeanFieldSpherical();
+  REQUIRE(spherical.size() == analytical.size());
+  CHECK(spherical[0] == Approx(analytical[0]).margin(0.01));
+  CHECK(spherical[1] == Approx(analytical[1]).margin(0.01));
+}
+
+TEST_CASE("spherical mean field in 2d", "[generic_system]") {
+  // ODE will not be used, HarmonicOscillator as dummy
+  double omega = 1.;
+  sam::GenericSystem<HarmonicOscillatorODE> system(4, 2, omega);
+  std::vector<double> x = {0., 5., 3., 2., 1., 3., 7., 8.};
+  std::vector<double> analytical = {5.27, 1.0222};
+  system.SetPosition(x);
+  std::vector<double> spherical = system.CalculateMeanFieldSpherical();
+  REQUIRE(spherical.size() == analytical.size());
+  CHECK(spherical[0] == Approx(analytical[0]).margin(0.1));
+  CHECK(spherical[1] == Approx(analytical[1]).margin(0.1));
+}
+
+TEST_CASE("spherical mean field in 3d", "[generic_system]") {
+  // ODE will not be used, HarmonicOscillator as dummy
+  double omega = 1.;
+  sam::GenericSystem<HarmonicOscillatorODE> system(3, 3, omega);
+  std::vector<double> x = {0., 1., 5., 4., 2., 7., 5., 2., 4.};
+  std::vector<double> analytical = {6.342, 1.078, 1.2679};
+  system.SetPosition(x);
+  std::vector<double> spherical = system.CalculateMeanFieldSpherical();
+  REQUIRE(spherical.size() == analytical.size());
+  CHECK(spherical[0] == Approx(analytical[0]).margin(0.1));
+  CHECK(spherical[1] == Approx(analytical[1]).margin(0.1));
+  CHECK(spherical[2] == Approx(analytical[2]).margin(0.1));
+}

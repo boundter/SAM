@@ -98,26 +98,26 @@ class GenericSystem {
    */
   state_type GetPositionSpherical() const;
 
-//   /*!
-//     *  \brief Returns the average position of all elements in the state
-//     *  space.
-//     */
-//   state_type CalculateMeanField() {
-//     return CalculateMeanField(x_.begin(), x_.end());
-//   }
+  /*!
+   *  \brief Returns the average position of all elements in the state
+   *  space.
+   *
+   * The mean field is the average position in the state space. It has the same
+   * dimension as one unit of the system.
+   *
+   * @returns A position in state space that is the average of all units.
+   */
+  state_type CalculateMeanField() const;
 
 
-//   /*!
-//     * \brief Calculates the coordinates on a sphere of the same dimension as
-//     * the phase space. If the deimension is 1, the corrdinates will be wrapped
-//     * around the unit circle. The first coordinate is the radius and the later
-//     * ones are the phases. Careful: in 3-d this is not the same as spherical
-//     * coordinates with polar angle and azimuth!
-//     */
-//   state_type CalculateMeanFieldSpherical() {
-//     return CalculateMeanFieldSpherical(x_.begin(), x_.end());
-//   }
-
+  /*!
+   * \brief Calculates the coordinates on a sphere of the same dimension as
+   * the phase space. If the deimension is 1, the corrdinates will be wrapped
+   * around the unit circle. The first coordinate is the radius and the later
+   * ones are the phases. Careful: in 3-d this is not the same as spherical
+   * coordinates with polar angle and azimuth!
+   */
+  state_type CalculateMeanFieldSpherical() const;
 
 
 
@@ -265,71 +265,26 @@ class GenericSystem {
   unsigned int N_, d_;
   state_type x_;
   double t_;
-  typedef typename state_type::iterator iterator_type;
+
+  /*!
+   *  \brief Initializer for the GenericSystem class. No ODE will be
+   *  initialized, it is intended for the use in inherited classes.
+   */
+  explicit GenericSystem(unsigned int system_size, unsigned int dimension);
 
 
-//   /*!
-//     *  \brief Initializer for the GenericSystem class. No ODE will be
-//     *  initialized, it is intended for the use in inherited classes.
-//     */
-//   GenericSystem(unsigned int system_size, unsigned int dimension) {
-//     N_ = system_size;
-//     d_ = dimension;
-//     x_.resize(N_*d_);
-//     t_ = 0.;
-//   }
+  // Calculate the mean field using iterators to allow easy calculation of the
+  // mean field in a network
+  state_type CalculateMeanField(
+    const typename state_type::const_iterator start,
+    const typename state_type::const_iterator end) const;
 
 
-//   // Calculate the mean field using iterators to allow easy calculation of the
-//   // mean field in a network
-//   state_type CalculateMeanField(const iterator_type start,
-//                                 const iterator_type end) {
-//     double N = static_cast<double>(end-start)/static_cast<double>(d_);
-//     if (N != static_cast<unsigned int>(N)) {
-//       throw std::length_error("Mean Field cannot be calculated, if not all "
-//                               "oscillators are given.");
-//     }
-//     state_type mean_field(d_);
-//     // TODO(boundter): Check size
-//     for (iterator_type i = start; i < end; i += d_) {
-//       for (iterator_type j = i; j < i + d_; ++j) {
-//         mean_field[j-i] += (*j);
-//       }
-//     }
-//     for (iterator_type i = mean_field.begin(); i != mean_field.end(); ++i) {
-//       (*i) /= static_cast<double>(N);
-//     }
-//     return mean_field;
-//   }
-
-
-//   // Calculate the mean field using iterators to allow easy calculation of the
-//   // mean field in a network
-//   state_type CalculateMeanFieldSpherical(const iterator_type start,
-//                                          const iterator_type end) {
-//     double N = static_cast<double>(end-start)/static_cast<double>(d_);
-//     if (N != static_cast<unsigned int>(N)) {
-//       throw std::length_error("Mean Field cannot be calculated, if not all "
-//                               "oscillators are given.");
-//     }
-//     // for d = 1 wrap around unit circle
-//     state_type spherical_mean_field;
-//     if (d_ == 1) {
-//       double x = 0, y = 0;
-//       for (iterator_type i = start; i != end; ++i) {
-//         x += cos((*i));
-//         y += sin((*i));
-//       }
-//       spherical_mean_field.resize(2);
-//       spherical_mean_field[0] = 1./N*sqrt(x*x + y*y);
-//       spherical_mean_field[1] = atan2(y, x);
-//     } else {
-//       spherical_mean_field = CartesianToSpherical(CalculateMeanField(start,
-//                                                                      end));
-//     }
-//     return spherical_mean_field;
-//   }
-
+  // Calculate the mean field using iterators to allow easy calculation of the
+  // mean field in a network
+  state_type CalculateMeanFieldSpherical(
+    const typename state_type::const_iterator start,
+    const typename state_type::const_iterator end) const;
 
 //  private:
 //   boost::numeric::odeint::runge_kutta4<state_type> stepper_;
@@ -367,6 +322,15 @@ GenericSystem<ODE, state_type>::GenericSystem(unsigned int system_size,
   x_.resize(N_*d_);
   t_ = 0.;
   ode_ = std::make_unique<ODE>(parameters...);
+}
+
+template<typename ODE, typename state_type>
+GenericSystem<ODE, state_type>::GenericSystem(unsigned int system_size,
+                                              unsigned int dimension) {
+  N_ = system_size;
+  d_ = dimension;
+  x_.resize(N_*d_);
+  t_ = 0.;
 }
 
 template<typename ODE, typename state_type>
@@ -420,6 +384,66 @@ state_type GenericSystem<ODE, state_type>::GetPositionSpherical() const {
     }
     return spherical;
   }
+}
+
+template<typename ODE, typename state_type>
+state_type GenericSystem<ODE, state_type>::CalculateMeanField() const {
+  return CalculateMeanField(x_.begin(), x_.end());
+}
+
+template<typename ODE, typename state_type>
+state_type GenericSystem<ODE, state_type>::CalculateMeanField(
+    const typename state_type::const_iterator start,
+    const typename state_type::const_iterator end) const {
+  double N = static_cast<double>(end-start)/static_cast<double>(d_);
+  if (N != static_cast<unsigned int>(N)) {
+    throw std::length_error("Mean Field cannot be calculated, if not all "
+                            "oscillators are given.");
+  }
+  state_type mean_field(d_);
+  // TODO(boundter): Check size
+  for (typename state_type::const_iterator i = start; i < end; i += d_) {
+    for (typename state_type::const_iterator j = i; j < i + d_; ++j) {
+      mean_field[j-i] += (*j);
+    }
+  }
+  for (typename state_type::iterator i = mean_field.begin();
+       i != mean_field.end(); ++i) {
+    (*i) /= static_cast<double>(N);
+  }
+  return mean_field;
+}
+
+template<typename ODE, typename state_type>
+state_type GenericSystem<ODE, state_type>::CalculateMeanFieldSpherical() const {
+  return CalculateMeanFieldSpherical(x_.begin(), x_.end());
+}
+
+template<typename ODE, typename state_type>
+state_type GenericSystem<ODE, state_type>::CalculateMeanFieldSpherical(
+    const typename state_type::const_iterator start,
+    const typename state_type::const_iterator end) const {
+  double N = static_cast<double>(end-start)/static_cast<double>(d_);
+  if (N != static_cast<unsigned int>(N)) {
+    throw std::length_error("Mean Field cannot be calculated, if not all "
+                            "oscillators are given.");
+  }
+  // for d = 1 wrap around unit circle
+  state_type spherical_mean_field;
+  if (d_ == 1) {
+    double x = 0, y = 0;
+    for (typename state_type::const_iterator i = start; i != end; ++i) {
+      x += cos((*i));
+      y += sin((*i));
+    }
+    spherical_mean_field.resize(2);
+    spherical_mean_field[0] = 1./N*sqrt(x*x + y*y);
+    spherical_mean_field[1] = atan2(y, x);
+  } else {
+    spherical_mean_field = CartesianToSpherical(CalculateMeanField(start,
+                                                                    end));
+  }
+  return spherical_mean_field;
 }
 
 }  // namespace sam
