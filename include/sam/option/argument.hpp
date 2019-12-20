@@ -38,8 +38,8 @@ struct Argument: public ArgumentBase {
    *  @param value Variable holding the argument.
    *  @param default_value Default value of the argument.
    */
-  Argument(std::string long_name, std::string description, T& value,
-           T default_value);
+  explicit Argument(std::string long_name, std::string description, T& value,
+                    T default_value);
 
   /*!
    *  @param long_name Long name of the command line arguments.
@@ -48,39 +48,41 @@ struct Argument: public ArgumentBase {
    *  @param value Variable holding the argument.
    *  @param default_value Default value of the argument.
    */
-  Argument(std::string long_name, std::string short_name,
-           std::string description, T& value, T default_value);
+  explicit Argument(std::string long_name, std::string short_name,
+                    std::string description, T& value, T default_value);
 
   /*!
    *  Adds the arguments to the description.
    */
-  void AddArgument(boost::program_options::options_description& desc);
+  void AddArgument(boost::program_options::options_description& desc) const;
 
   /*!
    *  Parse the arguments and save the value to the variable. If no value was
    *  passed it will set the default value.
    */
-  void ParseArgument(boost::program_options::variables_map& vmap);
+  void ParseArgument(boost::program_options::variables_map& vmap) const;
 
   /*!
    *  Convert the value to a string for printing.
    */
-  std::string GetValueAsString();
+  std::string GetValueAsString() const;
 
  private:
   template<typename M>
   void AddArgumentHelper(M default_value,
-                         boost::program_options::options_description& desc);
+                         boost::program_options::options_description& desc)
+      const;
 
   template<typename M>
   void AddArgumentHelper(std::vector<M> default_value,
-                         boost::program_options::options_description& desc);
+                         boost::program_options::options_description& desc)
+      const;
 
   template<typename M>
-  std::string ValueAsStringHelper(M value);
+  std::string ValueAsStringHelper(M value) const;
 
   template<typename M>
-  std::string ValueAsStringHelper(std::vector<M> value);
+  std::string ValueAsStringHelper(std::vector<M> value) const;
 };
 
 // Implementation
@@ -99,7 +101,7 @@ Argument<T>::Argument(std::string long_name, std::string short_name,
 
 template<typename T>
 void Argument<T>::AddArgument(
-    boost::program_options::options_description& desc) {
+    boost::program_options::options_description& desc) const {
   // Helper function to differentiate between the handling of values and
   // vectors.
   AddArgumentHelper(default_value_, desc);
@@ -108,7 +110,7 @@ void Argument<T>::AddArgument(
 template<typename T>
 template<typename M>
 void Argument<T>::AddArgumentHelper(
-    M default_value, boost::program_options::options_description& desc) {
+    M default_value, boost::program_options::options_description& desc) const {
   desc.add_options()(name_.c_str(),
                      boost::program_options::value<M>()->
                        default_value(default_value),
@@ -118,7 +120,7 @@ void Argument<T>::AddArgumentHelper(
 template<typename T>
 template<typename M>
 void Argument<T>::AddArgumentHelper(std::vector<M> default_value,
-    boost::program_options::options_description& desc) {
+    boost::program_options::options_description& desc) const {
   desc.add_options()(name_.c_str(),
                       boost::program_options::value<std::vector<M>>()
                         ->multitoken()-> default_value(default_value),
@@ -126,14 +128,15 @@ void Argument<T>::AddArgumentHelper(std::vector<M> default_value,
 }
 
 template<typename T>
-void Argument<T>::ParseArgument(boost::program_options::variables_map& vmap) {
+void Argument<T>::ParseArgument(
+      boost::program_options::variables_map& vmap) const {
   if (vmap.count(long_name_)) {
     value_ = vmap[long_name_].as<T>();
   }
 }
 
 template<typename T>
-std::string Argument<T>::GetValueAsString() {
+std::string Argument<T>::GetValueAsString() const {
   // Helper function to differentiate between the handling of values and
   // vectors.
   return ValueAsStringHelper(value_);
@@ -141,13 +144,13 @@ std::string Argument<T>::GetValueAsString() {
 
 template<typename T>
 template<typename M>
-std::string Argument<T>::ValueAsStringHelper(M value) {
+std::string Argument<T>::ValueAsStringHelper(M value) const {
   return std::to_string(value);
 }
 
 template<typename T>
 template<typename M>
-std::string Argument<T>::ValueAsStringHelper(std::vector<M> value) {
+std::string Argument<T>::ValueAsStringHelper(std::vector<M> value) const {
   std::stringstream ss;
   for (auto it = value.begin(); it != value.end(); ++it) {
     ss << (*it);
