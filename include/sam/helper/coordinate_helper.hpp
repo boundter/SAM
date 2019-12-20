@@ -24,6 +24,30 @@ namespace sam {
 // TODO(boundter): Handle special cases
 template<typename state_type>
 state_type CartesianToSpherical(typename state_type::const_iterator begin,
+                                typename state_type::const_iterator end);
+
+/*!
+ * \brief Transform cartesian coordinates into hyperspherical ones.
+ *
+ * Calculates the coordinates on a sphere of the same dimension as
+ * the phase space. If the dimension is 1, the corrdinates will be wrapped
+ * around the unit circle. The first coordinate is the radius and the later
+ * ones are the phases. Careful: in 3-d this is not the same as spherical
+ * coordinates with polar angle and azimuth!
+ *
+ * @param cartesian The cartesian coordinates.
+ *
+ * @returns The spherical coordinates in the same type as the cartesian
+ *          coordinates. The first entry is the magnitude, the following
+ *          entries the phases in the range [0, 2*pi].
+ */
+template<typename state_type>
+state_type CartesianToSpherical(const state_type& cartesian);
+
+// Implementation
+
+template<typename state_type>
+state_type CartesianToSpherical(typename state_type::const_iterator begin,
                                 typename state_type::const_iterator end) {
   unsigned int dimension = end - begin;
   state_type spherical;
@@ -52,21 +76,6 @@ state_type CartesianToSpherical(typename state_type::const_iterator begin,
   return spherical;
 }
 
-/*!
- * \brief Transform cartesian coordinates into hyperspherical ones.
- *
- * Calculates the coordinates on a sphere of the same dimension as
- * the phase space. If the dimension is 1, the corrdinates will be wrapped
- * around the unit circle. The first coordinate is the radius and the later
- * ones are the phases. Careful: in 3-d this is not the same as spherical
- * coordinates with polar angle and azimuth!
- *
- * @param cartesian The cartesian coordinates.
- *
- * @returns The spherical coordinates in the same type as the cartesian
- *          coordinates. The first entry is the magnitude, the following
- *          entries the phases in the range [0, 2*pi].
- */
 template<typename state_type>
 state_type CartesianToSpherical(const state_type& cartesian) {
   return CartesianToSpherical<state_type>(cartesian.begin(), cartesian.end());
