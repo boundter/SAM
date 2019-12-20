@@ -5,10 +5,12 @@ add_library(test_main main.cpp)
 target_link_libraries(test_main Catch sam)
 
 set(sources
-  #systems
+  # systems
   test_generic_system.cpp
   test_rk4_system.cpp
   test_euler_system.cpp
+  # networks
+  test_generic_network.cpp
   # odes
   test_harmonic_oscillator_ode.cpp
   #observers
