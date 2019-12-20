@@ -13,14 +13,23 @@ struct PositionObserver {
   std::vector<double>& time_;
 
   explicit PositionObserver(std::vector<state_type>& position,
-                   std::vector<double>& time)
-      : position_(position), time_(time) {}
+                   std::vector<double>& time);
 
-  void operator()(const state_type& x, double t) {
-    position_.push_back(x);
-    time_.push_back(t);
-  }
+  void operator()(const state_type& x, double t);
 };
+
+// Implementation
+
+template<typename state_type>
+PositionObserver<state_type>::PositionObserver(
+    std::vector<state_type>& position, std::vector<double>& time)
+    : position_(position), time_(time) {}
+
+template<typename state_type>
+void PositionObserver<state_type>::operator()(const state_type& x, double t) {
+  position_.push_back(x);
+  time_.push_back(t);
+}
 
 }  // namespace sam
 
