@@ -11,6 +11,13 @@
 
 namespace sam {
 
+/*! \brief A system that is integrated with an Euler method of order O(dt).
+ *
+ * A system that is integrated with an Euler method of order O(dt). The Euler
+ * method is defined as
+ * \f[ x_{n+1} = x_{n} + f_n dt, \f]
+ * where \f$ f_n \f$ is the derivative at timestep \f$ n \f$.
+ */
 template<typename ODE, typename state_type = std::vector<double>>
 class EulerSystem: public GenericSystem<ODE, state_type> {
  public:

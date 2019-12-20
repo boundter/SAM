@@ -14,6 +14,12 @@
 
 namespace sam {
 
+/*! \brief A system that is integrated with a 4th order Runge-Kutta method.
+ *
+ * A system that is integrated with a Runge-Kutta method of 4th order. The
+ * integrator is implemented by the odeint library in boost
+ * (https://www.boost.org/doc/libs/1_72_0/libs/numeric/odeint/doc/html/index.html).
+ */
 template<typename ODE, typename state_type = std::vector<double>>
 class RK4System: public GenericSystem<ODE, state_type> {
  public:
