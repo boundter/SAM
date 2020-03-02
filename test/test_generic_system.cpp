@@ -1,6 +1,7 @@
 // Copyright 2019 Erik Teichmann <kontakt.teichmann@gmail.com>
 
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 #include "test/catch.hpp"
@@ -83,6 +84,19 @@ TEST_CASE("simple system", "[generic_system]") {
     REQUIRE(position.size() == initial.size());
     CHECK(position[0] == Approx(initial[0]).margin(0.01));
     CHECK(position[1] == Approx(initial[1]).margin(0.01));
+  }
+
+  SECTION("get and set time") {
+    REQUIRE(system.GetTime() == Approx(0).margin(0.001));
+    double new_t = 1.5;
+    system.SetTime(new_t);
+    REQUIRE(system.GetTime() == Approx(new_t).margin(0.001));
+  }
+
+  SECTION("get dimensionality of the system") {
+    std::pair<unsigned int, unsigned int> dim = system.GetDimension();
+    REQUIRE(dim.first == N);
+    REQUIRE(dim.second == dimension);
   }
 }
 

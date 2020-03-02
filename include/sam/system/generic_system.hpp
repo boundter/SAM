@@ -4,6 +4,7 @@
 #define INCLUDE_SAM_SYSTEM_GENERIC_SYSTEM_HPP_
 
 #include <stdexcept>  // length_error,
+#include <utility>
 #include <vector>
 
 #include <sam/helper/coordinate_helper.hpp>
@@ -49,9 +50,22 @@ class GenericSystem {
   double GetTime() const;
 
   /*!
+   *  \brief Set the current time for the system
+   */
+  void SetTime(double t);
+
+  /*!
    *  \brief Return the derivative at the current position at time.
    */
   state_type GetDerivative() const;
+
+  /*!
+   *  \brief Return the dimensionality of the system.
+   * 
+   *  Get the dimensionality as a pair in the form 
+   *  (number of oscillators, dimensionality of the oscillator).
+   */
+  std::pair<unsigned int, unsigned int> GetDimension() const;
 
   /*!
    * \brief Integrate the system whith an observer.
@@ -189,10 +203,24 @@ double GenericSystem<ODE, state_type>::GetTime() const {
 }
 
 template<typename ODE, typename state_type>
+void GenericSystem<ODE, state_type>::SetTime(double t) {
+  t_ = t;
+}
+
+template<typename ODE, typename state_type>
 state_type GenericSystem<ODE, state_type>::GetDerivative() const {
   state_type intermediate(x_.size());
   ode_->operator()(x_, intermediate, t_);
   return intermediate;
+}
+
+template<typename ODE, typename state_type>
+std::pair<unsigned int, unsigned int> GenericSystem<ODE, state_type>::
+    GetDimension() const {
+  std::pair<unsigned int, unsigned int> dimension;
+  dimension.first = N_;
+  dimension.second = d_;
+  return dimension;
 }
 
 template<typename ODE, typename state_type>
