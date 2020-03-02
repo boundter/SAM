@@ -18,7 +18,10 @@ set(sources
   #helper
   test_coordinate_helper.cpp
   # options
-  test_options.cpp)
+  test_options.cpp
+  # analysis
+  test_henon.cpp
+  )
 
 
 foreach (sourcefile ${sources})
