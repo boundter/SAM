@@ -23,8 +23,10 @@ class HarmonicOscillatorODE {
 
   void operator()(const std::vector<double>& x, std::vector<double>& dx,
                   double t) {
-    dx[0] = x[1];
-    dx[1] = -omega_*omega_*x[0];
+    for (unsigned int i = 0; i < x.size()/2.; ++i) {
+      dx[2*i] = x[2*i+1];
+      dx[2*i+1] = -omega_*omega_*x[2*i];
+    }
   }
 };
 

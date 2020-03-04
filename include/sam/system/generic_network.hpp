@@ -39,6 +39,8 @@ class GenericNetwork:
   explicit GenericNetwork(node_size_type node_sizes, unsigned int dimension,
                  Ts... parameters);
 
+  GenericNetwork(const GenericNetwork<ODE, data_type>& other_network);
+
   /*!
    * Sets the state of the system using a flattened representation of the form
    * state = {node_1x_1, node_1x_2, ..., node_2x_1, ....}.
@@ -85,6 +87,18 @@ class GenericNetwork:
    */
   double GetTime() const;
 
+  /*!
+   *  \brief Set the current time for the system.
+   */
+  void SetTime(double t);
+
+  /*!
+   *  \brief Set the parameters for the ODE. This creates a new pointer
+   *  to the ODE.
+   */
+  template<typename ...Ts>
+  void SetParameters(Ts... parameters);
+
  protected:
   node_size_type node_indices_;
   node_size_type node_sizes_;
@@ -106,6 +120,14 @@ GenericNetwork<ODE, data_type>::GenericNetwork(
   node_indices_ = CalculateNodeIndices(node_sizes);
   node_sizes_ = node_sizes;
   this->Resize(CalculateNumberOscillators(node_sizes_));
+}
+
+template<typename ODE, typename data_type>
+GenericNetwork<ODE, data_type>::GenericNetwork(
+    const GenericNetwork<ODE, data_type>& other_network)
+    : GenericSystem<ODE, state_type>(other_network) {
+  node_indices_ = other_network.node_indices_;
+  node_sizes_ = other_network.node_sizes_;
 }
 
 template<typename ODE, typename data_type>
@@ -173,6 +195,17 @@ std::vector<data_type> GenericNetwork<ODE, data_type>::GetPositionSpherical()
 template<typename ODE, typename data_type>
 double GenericNetwork<ODE, data_type>::GetTime() const {
   return GenericSystem<ODE, state_type>::GetTime();
+}
+
+template<typename ODE, typename data_type>
+void GenericNetwork<ODE, data_type>::SetTime(double t) {
+  return GenericSystem<ODE, state_type>::SetTime(t);
+}
+
+template<typename ODE, typename state_type>
+template<typename... Ts>
+void GenericNetwork<ODE, state_type>::SetParameters(Ts... parameters) {
+  GenericSystem<ODE, state_type>::SetParameters(parameters...);
 }
 
 }  // namespace sam

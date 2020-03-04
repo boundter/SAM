@@ -52,7 +52,7 @@ class GenericSystem {
   double GetTime() const;
 
   /*!
-   *  \brief Set the current time for the system
+   *  \brief Set the current time for the system.
    */
   void SetTime(double t);
 
