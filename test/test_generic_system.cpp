@@ -240,3 +240,97 @@ TEST_CASE("spherical mean field in 3d", "[generic_system]") {
   CHECK(spherical[1] == Approx(analytical[1]).margin(0.1));
   CHECK(spherical[2] == Approx(analytical[2]).margin(0.1));
 }
+
+TEST_CASE("copy system", "[generic_system]") {
+  double omega = 2.;
+  sam::GenericSystem<HarmonicOscillatorODE> system(1, 2, omega);
+  double t = 5.;
+  std::vector<double> x({1, 1});
+  std::vector<double> derivative({1, -4});
+  system.SetTime(t);
+  system.SetPosition(x);
+  double system_time = system.GetTime();
+  std::vector<double> system_pos = system.GetPosition();
+  std::vector<double> system_derivative = system.GetDerivative();
+  CHECK(system_time == Approx(t).margin(0.0001));
+  REQUIRE(system_pos.size() == 2);
+  CHECK(system_pos[0] == Approx(x[0]).margin(0.0001));
+  CHECK(system_pos[1] == Approx(x[1]).margin(0.0001));
+  REQUIRE(system_derivative.size() == 2);
+  CHECK(system_derivative[0] == Approx(derivative[0]).margin(0.0001));
+  CHECK(system_derivative[1] == Approx(derivative[1]).margin(0.0001));
+
+  SECTION("copy works") {
+    sam::GenericSystem<HarmonicOscillatorODE> copy_system = system;
+    double copy_time = copy_system.GetTime();
+    std::vector<double> copy_pos = copy_system.GetPosition();
+    std::vector<double> copy_derivative = copy_system.GetDerivative();
+    CHECK(copy_time == Approx(t).margin(0.0001));
+    REQUIRE(copy_pos.size() == 2);
+    CHECK(copy_pos[0] == Approx(x[0]).margin(0.0001));
+    CHECK(copy_pos[1] == Approx(x[1]).margin(0.0001));
+    REQUIRE(copy_derivative.size() == 2);
+    CHECK(copy_derivative[0] == Approx(derivative[0]).margin(0.0001));
+    CHECK(copy_derivative[1] == Approx(derivative[1]).margin(0.0001));
+  }
+
+  SECTION("deep copy evovles independent of original") {
+    sam::GenericSystem<HarmonicOscillatorODE> copy_system = system;
+    double new_time = 6.;
+    std::vector<double> new_pos({2, 2});
+    std::vector<double> new_derivative({2, -8});
+    copy_system.SetTime(new_time);
+    copy_system.SetPosition(new_pos);
+
+    double copy_time = copy_system.GetTime();
+    std::vector<double> copy_pos = copy_system.GetPosition();
+    std::vector<double> copy_derivative = copy_system.GetDerivative();
+    CHECK(copy_time == Approx(new_time).margin(0.0001));
+    REQUIRE(copy_pos.size() == 2);
+    CHECK(copy_pos[0] == Approx(new_pos[0]).margin(0.0001));
+    CHECK(copy_pos[1] == Approx(new_pos[1]).margin(0.0001));
+    REQUIRE(copy_derivative.size() == 2);
+    CHECK(copy_derivative[0] == Approx(new_derivative[0]).margin(0.0001));
+    CHECK(copy_derivative[1] == Approx(new_derivative[1]).margin(0.0001));
+
+    double system_time = system.GetTime();
+    std::vector<double> system_pos = system.GetPosition();
+    std::vector<double> system_derivative = system.GetDerivative();
+    CHECK(system_time == Approx(t).margin(0.0001));
+    REQUIRE(system_pos.size() == 2);
+    CHECK(system_pos[0] == Approx(x[0]).margin(0.0001));
+    CHECK(system_pos[1] == Approx(x[1]).margin(0.0001));
+    REQUIRE(system_derivative.size() == 2);
+    CHECK(system_derivative[0] == Approx(derivative[0]).margin(0.0001));
+    CHECK(system_derivative[1] == Approx(derivative[1]).margin(0.0001));
+  }
+
+  SECTION("ODE independent of original system") {
+    sam::GenericSystem<HarmonicOscillatorODE> copy_system = system;
+    double new_omega = 3.;
+    copy_system.SetParameters(new_omega);
+
+    std::vector<double> new_derivative({1, -9});
+    double copy_time = copy_system.GetTime();
+    std::vector<double> copy_pos = copy_system.GetPosition();
+    std::vector<double> copy_derivative = copy_system.GetDerivative();
+    CHECK(copy_time == Approx(t).margin(0.0001));
+    REQUIRE(copy_pos.size() == 2);
+    CHECK(copy_pos[0] == Approx(x[0]).margin(0.0001));
+    CHECK(copy_pos[1] == Approx(x[1]).margin(0.0001));
+    REQUIRE(copy_derivative.size() == 2);
+    CHECK(copy_derivative[0] == Approx(new_derivative[0]).margin(0.0001));
+    CHECK(copy_derivative[1] == Approx(new_derivative[1]).margin(0.0001));
+
+    double system_time = system.GetTime();
+    std::vector<double> system_pos = system.GetPosition();
+    std::vector<double> system_derivative = system.GetDerivative();
+    CHECK(system_time == Approx(t).margin(0.0001));
+    REQUIRE(system_pos.size() == 2);
+    CHECK(system_pos[0] == Approx(x[0]).margin(0.0001));
+    CHECK(system_pos[1] == Approx(x[1]).margin(0.0001));
+    REQUIRE(system_derivative.size() == 2);
+    CHECK(system_derivative[0] == Approx(derivative[0]).margin(0.0001));
+    CHECK(system_derivative[1] == Approx(derivative[1]).margin(0.0001));
+  }
+}

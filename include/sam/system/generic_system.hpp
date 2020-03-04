@@ -29,6 +29,8 @@ class GenericSystem {
   explicit GenericSystem(unsigned int system_size, unsigned int dimension,
                          Ts... parameters);
 
+  GenericSystem(const GenericSystem<ODE, state_type>& other_system);
+
   /*!
    *  \brief Return the position in the state space for all elements.
    */
@@ -61,8 +63,8 @@ class GenericSystem {
 
   /*!
    *  \brief Return the dimensionality of the system.
-   * 
-   *  Get the dimensionality as a pair in the form 
+   *
+   *  Get the dimensionality as a pair in the form
    *  (number of oscillators, dimensionality of the oscillator).
    */
   std::pair<unsigned int, unsigned int> GetDimension() const;
@@ -173,6 +175,17 @@ GenericSystem<ODE, state_type>::GenericSystem(unsigned int system_size,
   t_ = 0.;
   ode_ = std::make_unique<ODE>(parameters...);
 }
+
+template<typename ODE, typename state_type>
+GenericSystem<ODE, state_type>::GenericSystem(
+    const GenericSystem<ODE, state_type>& other_system) {
+  N_ = other_system.N_;
+  d_ = other_system.d_;
+  x_ = other_system.x_;
+  t_ = other_system.t_;
+  ode_ = std::unique_ptr<ODE>(new ODE(*other_system.ode_));
+}
+
 
 template<typename ODE, typename state_type>
 GenericSystem<ODE, state_type>::GenericSystem(unsigned int system_size,
