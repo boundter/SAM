@@ -19,9 +19,6 @@ option(BUILD_TESTS "Set ON to enable tests" OFF)
 find_package(Boost 1.61.0 COMPONENTS program_options REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
-find_package(NLopt 2.5.0)
-include_directories(${NLOPT_INCLUDE_DIRS})
-
 #add_subdirectory(lib)
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/include)
