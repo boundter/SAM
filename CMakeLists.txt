@@ -19,6 +19,10 @@ option(BUILD_TESTS "Set ON to enable tests" OFF)
 find_package(Boost 1.61.0 COMPONENTS program_options REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
+#include Eigen
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+include_directories(${EIGEN3_INCLUDE_DIR})
+
 #add_subdirectory(lib)
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/include)
@@ -27,7 +31,6 @@ add_library(sam INTERFACE)
 target_include_directories(sam INTERFACE
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
 target_link_libraries(sam ${Boost_LIBARIES})
-
 
 
 if(BUILD_TESTS)
