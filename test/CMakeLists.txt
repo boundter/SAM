@@ -21,6 +21,7 @@ set(sources
   test_options.cpp
   # analysis
   test_henon.cpp
+  test_savitzky_golay.cpp
   )
 
 

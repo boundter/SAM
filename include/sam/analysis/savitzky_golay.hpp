@@ -3,9 +3,10 @@
 #ifndef INCLUDE_SAM_ANALYSIS_SAVITZKY_GOLAY_HPP_
 #define INCLUDE_SAM_ANALYSIS_SAVITZKY_GOLAY_HPP_
 
-#include <vector>
 #include <Eigen/Dense>
-#include <iostream>
+
+#include <stdexcept>
+#include <vector>
 
 namespace sam {
 
@@ -42,22 +43,28 @@ std::vector<std::vector<double>> SavitzkyGolayFilter(double stepsize,
                                                      state_type state,
                                                      unsigned int n_points,
                                                      unsigned int derivatives) {
-  // TODO(boundter): Check n_points is uneven and derivatives < n_points
-  // TODO(boundter): Optimize sum multiplications
+  if (n_points%2 == 0) {
+    throw std::invalid_argument("Number of points for Savitzky-Golay Filter "
+        "has to be uneven.");
+  }
+  if (n_points < derivatives) {
+    throw std::invalid_argument("Number of points has to be bigger than "
+        "number of derivatives in Savitzky-Golay Filter.");
+  }
   Eigen::MatrixXd coefficients = CalculateConvolutionCoefficients(n_points,
-    derivatives);
+      derivatives);
   std::vector<std::vector<double>> a(derivatives);
   for (size_t point = n_points/2; point < state.size() - n_points/2; ++point) {
     for (size_t deriv = 0; deriv < derivatives; ++deriv) {
       double sum = 0.;
-      for (auto i = -n_points/2; i <= static_cast<int>(n_points)/2; ++i) {
-        sum += coefficients(i + n_points/2, deriv)*state[point + i];
+      for (int i = -static_cast<int>(n_points)/2;
+           i <= static_cast<int>(n_points)/2; ++i) {
+        sum += coefficients(deriv, i + n_points/2)*state[point + i];
       }
       sum *= factorial(deriv)/pow(stepsize, deriv);
       a[deriv].push_back(sum);
     }
   }
-  std::cout << coefficients;
   return a;
 }
 
