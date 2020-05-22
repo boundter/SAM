@@ -47,6 +47,15 @@ TEST_CASE("single harmonic oscillator") {
     REQUIRE(crossing.second[1] == Approx(-1).margin(0.001));
   }
 
+  SECTION("full integration first dimension with condition") {
+    std::pair<double, std::vector<double>> crossing =
+      IntegrateToCrossingConditional(system, 0, 0, dt,
+          [](std::vector<double> x) { return x[1] > 0; });
+    REQUIRE(crossing.first == Approx(3.*M_PI/2.).margin(0.0001));
+    REQUIRE(crossing.second[0] == Approx(0).margin(0.001));
+    REQUIRE(crossing.second[1] == Approx(1).margin(0.001));
+  }
+
   SECTION("full integration second dimension") {
     // get a short way away from the crossing
     system.Integrate(dt, 1);
@@ -54,6 +63,17 @@ TEST_CASE("single harmonic oscillator") {
       IntegrateToCrossing(system, 0, 1, dt, 0);
     REQUIRE(crossing.first == Approx(M_PI).margin(0.0001));
     REQUIRE(crossing.second[0] == Approx(-1).margin(0.001));
+    REQUIRE(crossing.second[1] == Approx(0).margin(0.001));
+  }
+
+  SECTION("full integration second dimension with condition") {
+    // get a short way away from the crossing
+    system.Integrate(dt, 1);
+    std::pair<double, std::vector<double>> crossing =
+      IntegrateToCrossingConditional(system, 0, 1, dt,
+          [](std::vector<double> x) { return x[0] > 0; });
+    REQUIRE(crossing.first == Approx(2.*M_PI).margin(0.0001));
+    REQUIRE(crossing.second[0] == Approx(1).margin(0.001));
     REQUIRE(crossing.second[1] == Approx(0).margin(0.001));
   }
 }
@@ -128,12 +148,35 @@ TEST_CASE("two uncoupled harmonic oscillators") {
     REQUIRE(crossing.second[3] == Approx(0).margin(0.001));
   }
 
+  SECTION("full integration first dimension first oscillator") {
+    std::pair<double, std::vector<double>> crossing =
+      IntegrateToCrossingConditional(system, 0, 0, dt,
+          [](std::vector<double> x) { return x[1] > 0; });
+    REQUIRE(crossing.first == Approx(3.*M_PI/2.).margin(0.0001));
+    REQUIRE(crossing.second[0] == Approx(0).margin(0.001));
+    REQUIRE(crossing.second[1] == Approx(1).margin(0.001));
+    REQUIRE(crossing.second[2] == Approx(-1).margin(0.001));
+    REQUIRE(crossing.second[3] == Approx(0).margin(0.001));
+  }
+
   SECTION("full integration second dimension first oscillator") {
     system.Integrate(dt, 1);
     std::pair<double, std::vector<double>> crossing =
       IntegrateToCrossing(system, 0, 1, dt, 0);
     REQUIRE(crossing.first == Approx(M_PI).margin(0.0001));
     REQUIRE(crossing.second[0] == Approx(-1).margin(0.001));
+    REQUIRE(crossing.second[1] == Approx(0).margin(0.001));
+    REQUIRE(crossing.second[2] == Approx(1).margin(0.001));
+    REQUIRE(crossing.second[3] == Approx(0).margin(0.001));
+  }
+
+  SECTION("full integration second dimension first oscillator") {
+    system.Integrate(dt, 1);
+    std::pair<double, std::vector<double>> crossing =
+      IntegrateToCrossingConditional(system, 0, 1, dt,
+          [](std::vector<double> x) { return x[0] > 0; });
+    REQUIRE(crossing.first == Approx(2.*M_PI).margin(0.0001));
+    REQUIRE(crossing.second[0] == Approx(1).margin(0.001));
     REQUIRE(crossing.second[1] == Approx(0).margin(0.001));
     REQUIRE(crossing.second[2] == Approx(1).margin(0.001));
     REQUIRE(crossing.second[3] == Approx(0).margin(0.001));
@@ -149,6 +192,17 @@ TEST_CASE("two uncoupled harmonic oscillators") {
     REQUIRE(crossing.second[3] == Approx(-2).margin(0.001));
   }
 
+  SECTION("full integration first dimension second oscillator") {
+    std::pair<double, std::vector<double>> crossing =
+      IntegrateToCrossingConditional(system, 1, 0, dt,
+          [](std::vector<double> x) { return x[3] > 0; });
+    REQUIRE(crossing.first == Approx(3*M_PI/4.).margin(0.0001));
+    REQUIRE(crossing.second[0] == Approx(-0.707).margin(0.001));
+    REQUIRE(crossing.second[1] == Approx(-0.707).margin(0.001));
+    REQUIRE(crossing.second[2] == Approx(0).margin(0.001));
+    REQUIRE(crossing.second[3] == Approx(2).margin(0.001));
+  }
+
   SECTION("full integration second dimension second oscillator") {
     system.Integrate(dt, 1);
     std::pair<double, std::vector<double>> crossing =
@@ -157,6 +211,18 @@ TEST_CASE("two uncoupled harmonic oscillators") {
     REQUIRE(crossing.second[0] == Approx(0).margin(0.001));
     REQUIRE(crossing.second[1] == Approx(-1).margin(0.001));
     REQUIRE(crossing.second[2] == Approx(-1).margin(0.001));
+    REQUIRE(crossing.second[3] == Approx(0).margin(0.001));
+  }
+
+  SECTION("full integration second dimension second oscillator") {
+    system.Integrate(dt, 1);
+    std::pair<double, std::vector<double>> crossing =
+      IntegrateToCrossingConditional(system, 1, 1, dt,
+          [](std::vector<double> x) { return x[2] > 0; });
+    REQUIRE(crossing.first == Approx(M_PI).margin(0.0001));
+    REQUIRE(crossing.second[0] == Approx(-1).margin(0.001));
+    REQUIRE(crossing.second[1] == Approx(0).margin(0.001));
+    REQUIRE(crossing.second[2] == Approx(1).margin(0.001));
     REQUIRE(crossing.second[3] == Approx(0).margin(0.001));
   }
 }

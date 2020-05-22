@@ -56,6 +56,31 @@ std::pair<double, state_type> IntegrateToCrossing(system_type& system,
                                                   double dt,
                                                   double target = 0);
 
+/*!
+ * \brief Integrate the system to the next regular point after axis crossing.
+ *
+ * The system is integrated to the next regular point after the crossing of
+ * an axis, where the value of the desired crossing can be set additionally some
+ * given condition has to be fulfilled. Using the Henon-Trick, the point and
+ * time of crossing is returned.
+ *
+ * @param system The system to integrate to the crossing.
+ * @param n_osc The oscillator which schould be considered (starts at 0).
+ * @param dimension The dimension to consider (start at 0).
+ * @param dt The integration timestep.
+ * @param condtion A boolean function that takes the current position.
+ * @param target The target value for the dimension.
+ *
+ * @returns A pair of time and state at the time of crossing.
+ *
+ * TODO: Implement max iter
+ * TODO: Implement condition/predicate
+ */
+template<typename system_type, typename condition_func,
+         typename state_type = std::vector<double>>
+std::pair<double, state_type> IntegrateToCrossingConditional(
+    system_type& system, unsigned int n_osc, unsigned int dimension,
+    double dt, condition_func&& condition, double target = 0);
 
 // Implementation
 
@@ -100,6 +125,15 @@ std::pair<double, state_type> IntegrateToCrossing(system_type& system,
                                                   unsigned int dimension,
                                                   double dt,
                                                   double target) {
+  return IntegrateToCrossingConditional(system, n_osc, dimension, dt,
+    [](state_type) { return true; }, target);
+}
+
+template<typename system_type, typename condition_func,
+         typename state_type = std::vector<double>>
+std::pair<double, state_type> IntegrateToCrossingConditional(
+    system_type& system, unsigned int n_osc, unsigned int dimension, double dt,
+    condition_func&& condition, double target) {
   std::pair<unsigned int, unsigned int> dimensionality = system.GetDimension();
   // dimensionality.second is the dimension of each oscillator
   size_t indx = dimensionality.second * n_osc + dimension;
@@ -108,7 +142,8 @@ std::pair<double, state_type> IntegrateToCrossing(system_type& system,
     previous_state = system.GetPosition();
     system.Integrate(dt, 1);
   } while (std::copysign(1., previous_state[indx] - target)
-           == std::copysign(1., system.GetPosition()[indx] - target));
+           == std::copysign(1., system.GetPosition()[indx] - target)
+           || !condition(system.GetPosition()));
   return HenonTrick(system, n_osc, dimension, target);
 }
 
