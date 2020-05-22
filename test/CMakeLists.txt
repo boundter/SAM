@@ -22,6 +22,7 @@ set(sources
   # analysis
   test_henon.cpp
   test_savitzky_golay.cpp
+  test_period.cpp
   )
 
 
