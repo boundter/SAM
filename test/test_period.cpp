@@ -9,6 +9,7 @@
 
 TEST_CASE("single harmonic oscillator") {
   // omega = 1 -> T = 2*pi
+  sam::PeriodParameters params;
   double omega = 1;
   unsigned int N = 1;
   unsigned int dimension = 2;
@@ -16,13 +17,14 @@ TEST_CASE("single harmonic oscillator") {
   std::vector<double> initial({1., 0.});
   sam::RK4System<HarmonicOscillatorODE> system(N, dimension, omega);
   system.SetPosition(initial);
-  double T = CalculatePeriod(system, 0, 0, dt,
-                             [](std::vector<double> x) { return x[1] > 0; });
+  double T = CalculatePeriod(system, dt,
+                             [](std::vector<double> x) { return x[1] > 0; }, params);
   REQUIRE(T == Approx(2.*M_PI).margin(1e-5));
 }
 
 TEST_CASE("two uncoupled harmonic oscillators") {
   // omega = 1 -> T = 2*pi
+  sam::PeriodParameters params;
   std::vector<double> omega({1, 2});
   double coupling = 0;
   unsigned int N = 2;
@@ -34,14 +36,15 @@ TEST_CASE("two uncoupled harmonic oscillators") {
   system.SetPosition(initial);
 
   SECTION("first oscillator") {
-    double T = CalculatePeriod(system, 0, 0, dt,
-                               [](std::vector<double> x) { return x[1] > 0; });
+    double T = sam::CalculatePeriod(system, dt,
+                               [](std::vector<double> x) { return x[1] > 0; }, params);
     REQUIRE(T == Approx(2.*M_PI).margin(1e-5));
   }
 
   SECTION("second oscillator") {
-    double T = CalculatePeriod(system, 1, 0, dt,
-                               [](std::vector<double> x) { return x[3] > 0; });
+    params.n_osc = 1;
+    double T = sam::CalculatePeriod(system, dt,
+                               [](std::vector<double> x) { return x[3] > 0; }, params);
     REQUIRE(T == Approx(M_PI).margin(1e-5));
   }
 }

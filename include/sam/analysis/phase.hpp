@@ -7,50 +7,53 @@
 #include <utility>
 #include <vector>
 
+#include "include/sam/analysis/henon.hpp"
+
 namespace sam {
+
+struct PhaseParameters : CrossingParameters {
+  double phase_tolerance = 1e-7;
+  unsigned int phase_max_iter = 100;
+  unsigned int phase_steps_per_period = 1000;
+};
 
 template <typename system_type, typename condition_func,
           typename state_type = std::vector<double>>
 double PhaseOnLimitCycle(system_type system, double period, double dt,
-                         unsigned int n_osc, unsigned int dimension,
-                         condition_func&& condition);
+                         condition_func&& condition, CrossingParameters params);
 
 template <typename system_type, typename condition_func,
           typename state_type = std::vector<double>>
 double FindPhase(const state_type& position, double period,
-                 system_type unperturbed_system, unsigned int n_osc,
-                 unsigned int dimension, condition_func&& condition,
-                 double tolerance = 1e-7,
-                 unsigned int max_iter = 100,
-                 unsigned int steps_per_period = 1000);
+                 system_type unperturbed_system, condition_func&& condition,
+                 PhaseParameters params);
 
 
 template <typename system_type, typename condition_func,
           typename state_type = std::vector<double>>
 std::pair<double, double> FindLinearizedPhaseFrequency(const state_type& state,
-    double period, system_type linearized_system, unsigned int n_osc,
-    unsigned int dimension, condition_func&& condition, double tolerance = 1e-7,
-    unsigned int max_iter = 100, unsigned int steps_per_period = 1000);
+    double period, system_type linearized_system, condition_func&& condition,
+    PhaseParameters params);
 
 
 // Implementation
 
 template <typename system_type, typename condition_func, typename state_type>
 double PhaseOnLimitCycle(system_type system, double period, double dt,
-                         unsigned int n_osc, unsigned int dimension,
-                         condition_func&& condition) {
+                         condition_func&& condition,
+                         CrossingParameters params) {
   system.SetTime(0.);
   std::pair<double, state_type> crossing = IntegrateToCrossingConditional(
-      system, n_osc, dimension, dt, condition);
+      system, dt, condition, params);
   double delta_t = crossing.first;
   return 2*M_PI*(period - delta_t)/period;
 }
 
 template<typename system_type, typename state_type>
-bool RelaxOntoLimitCycle(system_type& system, double period, double tolerance,
-                         unsigned int max_iter, unsigned int steps_per_period,
+bool RelaxOntoLimitCycle(system_type& system, double period,
+                         PhaseParameters params,
                          std::vector<size_t> pos_indx = std::vector<size_t>()) {
-  double dt = period / static_cast<double>(steps_per_period);
+  double dt = period / static_cast<double>(params.phase_steps_per_period);
   if (pos_indx.size() == 0) {
     for (size_t i = 0; i < system.GetPosition().size(); ++i) {
       pos_indx.push_back(i);
@@ -62,42 +65,39 @@ bool RelaxOntoLimitCycle(system_type& system, double period, double tolerance,
   do {
     error = 0;
     pos_previous = system.GetPosition();
-    system.Integrate(dt, steps_per_period);
+    system.Integrate(dt, params.phase_steps_per_period);
     state_type position = system.GetPosition();
     for (auto it = pos_indx.begin(); it != pos_indx.end(); ++it) {
       error += std::fabs(pos_previous[*it] - position[*it]);
     }
     ++iter;
-  } while (error > tolerance && iter < max_iter);
-  return iter != max_iter;
+  } while (error > params.phase_tolerance && iter < params.phase_max_iter);
+  return iter != params.phase_max_iter;
 }
 
 template <typename system_type, typename condition_func,
           typename state_type = std::vector<double>>
 double FindPhase(const state_type& position, double period,
-                 system_type unperturbed_system, unsigned int n_osc,
-                 unsigned int dimension, condition_func&& condition,
-                 double tolerance, unsigned int max_iter,
-                 unsigned int steps_per_period) {
-  double dt = period / static_cast<double>(steps_per_period);
+                 system_type unperturbed_system, condition_func&& condition,
+                 PhaseParameters params) {
+  double dt = period / static_cast<double>(params.phase_steps_per_period);
   unperturbed_system.SetTime(0.);
   unperturbed_system.SetPosition(position);
   bool relaxed = RelaxOntoLimitCycle<system_type, state_type>(
-    unperturbed_system, period, tolerance, max_iter, steps_per_period);
+    unperturbed_system, period, params);
   if (!relaxed) {
     return -1;
   }
-  return PhaseOnLimitCycle(unperturbed_system, period, dt, n_osc, dimension,
-                           condition);
+  return PhaseOnLimitCycle(unperturbed_system, period, dt,
+                           condition, params);
 }
 
 template <typename system_type, typename condition_func,
           typename state_type = std::vector<double>>
 std::pair<double, double> FindLinearizedPhaseFrequency(const state_type& state,
-    double period, system_type linearized_system, unsigned int n_osc,
-    unsigned int dimension, condition_func&& condition, double tolerance,
-    unsigned int max_iter, unsigned int steps_per_period) {
-  double dt = period / static_cast<double>(steps_per_period);
+    double period, system_type linearized_system, condition_func&& condition,
+    PhaseParameters params) {
+  double dt = period / static_cast<double>(params.phase_steps_per_period);
   linearized_system.SetTime(0.);
   linearized_system.SetPosition(state);
   std::vector<size_t> pos_indx;
@@ -105,7 +105,7 @@ std::pair<double, double> FindLinearizedPhaseFrequency(const state_type& state,
     pos_indx.push_back(i);
   }
   bool relaxed = RelaxOntoLimitCycle<system_type, state_type>(
-    linearized_system, period, tolerance, max_iter, steps_per_period, pos_indx);
+    linearized_system, period, params, pos_indx);
   if (!relaxed) {
     return std::make_pair(-1, -1);
   }
@@ -119,8 +119,8 @@ std::pair<double, double> FindLinearizedPhaseFrequency(const state_type& state,
   }
   double frequency = 2*M_PI/period*scalar_product/derivative_norm;
 
-  double phase = PhaseOnLimitCycle(linearized_system, period, dt, n_osc,
-                                   dimension, condition);
+  double phase = PhaseOnLimitCycle(linearized_system, period, dt, condition,
+                                   params);
   return std::make_pair(phase, frequency);
 }
 

@@ -82,6 +82,8 @@ double AnalyticFrequency(state_type x, state_type dx, double alpha) {
 }
 
 TEST_CASE("phase for perturbed Stuart-Landau oscillator") {
+  sam::PhaseParameters phase_params;
+  sam::PeriodParameters period_params;
   const double alpha = 0.1;
   const double nu = 1;
   const double eps = 0.2;
@@ -93,14 +95,14 @@ TEST_CASE("phase for perturbed Stuart-Landau oscillator") {
   sam::RK4System<StuartLandauODE> system(1, 2, alpha);
   system.SetPosition(initial);
   system.Integrate(dt, n_trans);
-  double T = sam::CalculatePeriod(system, 0, 0, dt, CrossingCondition);
+  double T = sam::CalculatePeriod(system, dt, CrossingCondition, period_params);
 
   SECTION("phase on limit cycle") {
     for (unsigned int i = 0; i < 10; ++i) {
       system.Integrate(dt, 70);
       double phase_analytic = AnalyticPhase(system.GetPosition(), alpha);
-      double phase = sam::PhaseOnLimitCycle(system, T, dt, 0, 0,
-                                            CrossingCondition);
+      double phase = sam::PhaseOnLimitCycle(system, T, dt,
+                                            CrossingCondition, phase_params);
       REQUIRE(phase == Approx(phase_analytic).margin(0.001));
     }
   }
@@ -113,7 +115,7 @@ TEST_CASE("phase for perturbed Stuart-Landau oscillator") {
       forced_system.Integrate(dt, 70);
       state_type pos = forced_system.GetPosition();
       double phase_analytic = AnalyticPhase(pos, alpha);
-      double phase = sam::FindPhase(pos, T, system, 0, 0, CrossingCondition);
+      double phase = sam::FindPhase(pos, T, system, CrossingCondition, phase_params);
       REQUIRE(phase == Approx(phase_analytic).margin(0.001));
     }
   }
@@ -132,7 +134,7 @@ TEST_CASE("phase for perturbed Stuart-Landau oscillator") {
       double phase_analytic = AnalyticPhase(pos, alpha);
       double freq_analytic = AnalyticFrequency(pos, deriv, alpha);
       std::pair<double, double> phase_freq = sam::FindLinearizedPhaseFrequency(
-        y, T, linearized_system, 0, 0, CrossingCondition);
+        y, T, linearized_system, CrossingCondition, phase_params);
       REQUIRE(phase_freq.first == Approx(phase_analytic).margin(0.001));
       REQUIRE(phase_freq.second == Approx(freq_analytic).margin(0.0001));
     }

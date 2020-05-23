@@ -10,6 +10,15 @@
 namespace sam {
 
 /*!
+ * \brief Parameters for the point of crossing of an axis.
+ */
+struct CrossingParameters {
+  unsigned int n_osc = 0;  //! The oscillator which should be considered.
+  unsigned int dimension = 0;  //! The dimension to consider.
+  double target = 0.;  //! The target value for the dimension.
+};
+
+/*!
  * \brief Return crossing of axis with Henon trick.
  *
  * The Henon allows for the calculation of the crossing of an axis by using
@@ -20,16 +29,13 @@ namespace sam {
  * https://www.sciencedirect.com/science/article/abs/pii/0167278982900343
  *
  * @param system The system with a state close to the crossing.
- * @param n_osc The oscillator which should be considered (starts at 0).
- * @param dimension The dimension to consider (starts at 0).
- * @param target The target value for the dimension
+ * @param params The parameters for the crossing.
  *
  * @returns A pair of time and state at the time of crossing.
  */
 template<typename system_type, typename state_type = std::vector<double>>
 std::pair<double, state_type> HenonTrick(const system_type& system,
-                                         unsigned int n_osc,
-                                         unsigned int dimension, double target);
+                                         CrossingParameters params);
 
 /*!
  * \brief Integrate the system to the next regular point after axis crossing.
@@ -39,10 +45,8 @@ std::pair<double, state_type> HenonTrick(const system_type& system,
  * Henon-Trick, the point and time of crossing is returned.
  *
  * @param system The system to integrate to the crossing.
- * @param n_osc The oscillator which schould be considered (starts at 0).
- * @param dimension The dimension to consider (start at 0).
+ * @param params The parameters for the crossing.
  * @param dt The integration timestep.
- * @param target The target value for the dimension.
  *
  * @returns A pair of time and state at the time of crossing.
  *
@@ -51,10 +55,8 @@ std::pair<double, state_type> HenonTrick(const system_type& system,
  */
 template<typename system_type, typename state_type = std::vector<double>>
 std::pair<double, state_type> IntegrateToCrossing(system_type& system,
-                                                  unsigned int n_osc,
-                                                  unsigned int dimension,
                                                   double dt,
-                                                  double target = 0);
+                                                  CrossingParameters params);
 
 /*!
  * \brief Integrate the system to the next regular point after axis crossing.
@@ -79,19 +81,17 @@ std::pair<double, state_type> IntegrateToCrossing(system_type& system,
 template<typename system_type, typename condition_func,
          typename state_type = std::vector<double>>
 std::pair<double, state_type> IntegrateToCrossingConditional(
-    system_type& system, unsigned int n_osc, unsigned int dimension,
-    double dt, condition_func&& condition, double target = 0);
+    system_type& system, double dt, condition_func&& condition,
+    CrossingParameters params);
 
 // Implementation
 
 template<typename system_type, typename state_type>
 std::pair<double, state_type> HenonTrick(const system_type& system,
-                                         unsigned int n_osc,
-                                         unsigned int dimension,
-                                         double target) {
+                                         CrossingParameters params) {
   std::pair<unsigned int, unsigned int> dimensionality = system.GetDimension();
   // dimensionality.second is the dimension of each oscillator
-  size_t indx = dimensionality.second * n_osc + dimension;
+  size_t indx = dimensionality.second * params.n_osc + params.dimension;
   state_type derivative = system.GetDerivative();
   for (size_t i = 0; i < derivative.size(); ++i) {
     if (i == indx) {
@@ -104,12 +104,12 @@ std::pair<double, state_type> HenonTrick(const system_type& system,
 
   double t = system.GetTime();
   state_type state = system.GetPosition();
-  double dx = target - state[indx];
+  double dx = params.target - state[indx];
   // Euler Integration
   t += derivative[indx]*dx;
   for (size_t i = 0; i < state.size(); ++i) {
     if (i == indx) {
-      state[i] = target;
+      state[i] = params.target;
       continue;
     } else {
       state[i] += derivative[i]*dx;
@@ -121,30 +121,28 @@ std::pair<double, state_type> HenonTrick(const system_type& system,
 
 template<typename system_type, typename state_type = std::vector<double>>
 std::pair<double, state_type> IntegrateToCrossing(system_type& system,
-                                                  unsigned int n_osc,
-                                                  unsigned int dimension,
                                                   double dt,
-                                                  double target) {
-  return IntegrateToCrossingConditional(system, n_osc, dimension, dt,
-    [](state_type) { return true; }, target);
+                                                  CrossingParameters params) {
+  return IntegrateToCrossingConditional(system, dt,
+    [](state_type) { return true; }, params);
 }
 
 template<typename system_type, typename condition_func,
          typename state_type = std::vector<double>>
 std::pair<double, state_type> IntegrateToCrossingConditional(
-    system_type& system, unsigned int n_osc, unsigned int dimension, double dt,
-    condition_func&& condition, double target) {
+    system_type& system, double dt, condition_func&& condition,
+    CrossingParameters params) {
   std::pair<unsigned int, unsigned int> dimensionality = system.GetDimension();
   // dimensionality.second is the dimension of each oscillator
-  size_t indx = dimensionality.second * n_osc + dimension;
+  size_t indx = dimensionality.second * params.n_osc + params.dimension;
   state_type previous_state;
   do {
     previous_state = system.GetPosition();
     system.Integrate(dt, 1);
-  } while (std::copysign(1., previous_state[indx] - target)
-           == std::copysign(1., system.GetPosition()[indx] - target)
+  } while (std::copysign(1., previous_state[indx] - params.target)
+           == std::copysign(1., system.GetPosition()[indx] - params.target)
            || !condition(system.GetPosition()));
-  return HenonTrick(system, n_osc, dimension, target);
+  return HenonTrick(system, params);
 }
 
 }  // namespace sam
