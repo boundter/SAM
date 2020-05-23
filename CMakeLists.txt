@@ -31,7 +31,7 @@ add_library(sam INTERFACE)
 target_include_directories(sam INTERFACE
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-#target_link_libraries(sam ${Boost_LIBARIES})
+target_link_libraries(sam ${Boost_LIBARIES})
 
 include(CMakePackageConfigHelpers)
 set(PROJECT_CMAKE_DIR "lib/cmake/sam")
