@@ -13,53 +13,60 @@ typedef std::vector<double> state_type;
 
 class StuartLandauODE {
  public:
-  explicit StuartLandauODE(double alpha): alpha_(alpha) {}
+  explicit StuartLandauODE(double alpha, double omega)
+      : alpha_(alpha), omega_(omega) {}
 
   void operator()(const state_type& x, state_type& dx, double t) {
     double R2 = x[0]*x[0] + x[1]*x[1];
-    dx[0] = x[0] - x[1] - R2*(x[0] - alpha_*x[1]);
-    dx[1] = x[1] + x[0] - R2*(x[1] + alpha_*x[0]);
+    dx[0] = x[0] - (omega_ + alpha_)*x[1] - R2*(x[0] - alpha_*x[1]);
+    dx[1] = x[1] + (omega_ + alpha_)*x[0] - R2*(x[1] + alpha_*x[0]);
   }
 
  private:
   double alpha_;
+  double omega_;
 };
 
 class StuartLandauForcedODE {
  public:
-  explicit StuartLandauForcedODE(double alpha, double eps, double nu)
-      : alpha_(alpha), eps_(eps), nu_(nu) { }
+  explicit StuartLandauForcedODE(double alpha, double omega, double eps,
+                                 double nu)
+      : alpha_(alpha), omega_(omega), eps_(eps), nu_(nu) { }
 
   void operator()(const state_type& x, state_type& dx, double t) {
     double R2 = x[0]*x[0] + x[1]*x[1];
-    dx[0] = x[0] - x[1] - R2*(x[0] - alpha_*x[1]) + eps_*std::cos(nu_*t);
-    dx[1] = x[1] + x[0] - R2*(x[1] + alpha_*x[0]);
+    dx[0] = x[0] - (omega_ + alpha_)*x[1] - R2*(x[0] - alpha_*x[1])
+            + eps_*std::cos(nu_*t);
+    dx[1] = x[1] + (omega_ + alpha_)*x[0] - R2*(x[1] + alpha_*x[0]);
   }
 
  private:
   double alpha_;
+  double omega_;
   double eps_;
   double nu_;
 };
 
 class StuartLandauLinearizedODE {
  public:
-  explicit StuartLandauLinearizedODE(double alpha) : alpha_(alpha) {}
+  explicit StuartLandauLinearizedODE(double alpha, double omega)
+      : alpha_(alpha), omega_(omega) {}
 
   void operator()(const state_type& x, state_type& dx, double t) {
     double R2 = x[0]*x[0] + x[1]*x[1];
-    dx[0] = x[0] - x[1] - R2*(x[0] - alpha_*x[1]);
-    dx[1] = x[1] + x[0] - R2*(x[1] + alpha_*x[0]);
-    dx[2] = x[2] - x[3] - 3*x[0]*x[0]*x[2] - x[1]*x[1]*x[2]
+    dx[0] = x[0] - (omega_ + alpha_)*x[1] - R2*(x[0] - alpha_*x[1]);
+    dx[1] = x[1] + (omega_ + alpha_)*x[0] - R2*(x[1] + alpha_*x[0]);
+    dx[2] = x[2] - (omega_ + alpha_)*x[3] - 3*x[0]*x[0]*x[2] - x[1]*x[1]*x[2]
             - 2*x[0]*x[1]*x[3] + 2*alpha_*x[0]*x[1]*x[2]
             + alpha_*x[0]*x[0]*x[3] + 3*alpha_*x[1]*x[1]*x[3];
-    dx[3] = x[2] + x[3] - 2*x[0]*x[1]*x[2] - x[0]*x[0]*x[3] - 3*x[1]*x[1]*x[3]
-            - 3*alpha_*x[0]*x[0]*x[2] - alpha_*x[1]*x[1]*x[2]
+    dx[3] = (omega_ + alpha_)*x[2] + x[3] - 2*x[0]*x[1]*x[2] - x[0]*x[0]*x[3]
+            - 3*x[1]*x[1]*x[3] - 3*alpha_*x[0]*x[0]*x[2] - alpha_*x[1]*x[1]*x[2]
             - 2*alpha_*x[0]*x[1]*x[3];
   }
 
  private:
   double alpha_;
+  double omega_;
 };
 
 bool CrossingCondition(state_type x) {
@@ -84,6 +91,7 @@ double AnalyticFrequency(state_type x, state_type dx, double alpha) {
 TEST_CASE("phase for perturbed Stuart-Landau oscillator") {
   sam::PhaseParameters phase_params;
   sam::PeriodParameters period_params;
+  const double omega = 0.9;
   const double alpha = 0.1;
   const double nu = 1;
   const double eps = 0.2;
@@ -92,7 +100,7 @@ TEST_CASE("phase for perturbed Stuart-Landau oscillator") {
 
   state_type initial({1, 1});
 
-  sam::RK4System<StuartLandauODE> system(1, 2, alpha);
+  sam::RK4System<StuartLandauODE> system(1, 2, alpha, omega);
   system.SetPosition(initial);
   system.Integrate(dt, n_trans);
   double T = sam::CalculatePeriod(system, dt, CrossingCondition, period_params);
@@ -108,21 +116,25 @@ TEST_CASE("phase for perturbed Stuart-Landau oscillator") {
   }
 
   SECTION("phase of perturbed system") {
-    sam::RK4System<StuartLandauForcedODE> forced_system(1, 2, alpha, eps, nu);
+    sam::RK4System<StuartLandauForcedODE> forced_system(1, 2, alpha, omega, eps,
+                                                        nu);
     forced_system.SetPosition(initial);
     forced_system.Integrate(dt, n_trans);
     for (unsigned int i = 0; i < 10; ++i) {
       forced_system.Integrate(dt, 70);
       state_type pos = forced_system.GetPosition();
       double phase_analytic = AnalyticPhase(pos, alpha);
-      double phase = sam::FindPhase(pos, T, system, CrossingCondition, phase_params);
+      double phase = sam::FindPhase(pos, T, system, CrossingCondition,
+                                    phase_params);
       REQUIRE(phase == Approx(phase_analytic).margin(0.001));
     }
   }
 
   SECTION("phase and frequency of perturbed system") {
-    sam::RK4System<StuartLandauForcedODE> forced_system(1, 2, alpha, eps, nu);
-    sam::RK4System<StuartLandauLinearizedODE> linearized_system(1, 4, alpha);
+    sam::RK4System<StuartLandauForcedODE> forced_system(1, 2, alpha, omega,
+                                                        eps, nu);
+    sam::RK4System<StuartLandauLinearizedODE> linearized_system(1, 4, alpha,
+                                                                omega);
     forced_system.SetPosition(initial);
     forced_system.Integrate(dt, n_trans);
     for (unsigned int i = 0; i < 10; ++i) {
