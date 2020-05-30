@@ -7,7 +7,7 @@
 #include "include/sam/observer/derivative_observer.hpp"
 #include "include/sam/system/generic_system.hpp"
 
-TEST_CASE("PositionObserver saves position") {
+TEST_CASE("observer saves derivative") {
   std::vector<double> pos_1({1.5, 2.6});
   std::vector<double> pos_2({2.3, 3.8});
   double t_1 = 0.1;
