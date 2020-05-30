@@ -16,6 +16,7 @@ set(sources
   test_harmonic_oscillator_ode.cpp
   #observers
   test_position_observer.cpp
+  test_derivative_observer.cpp
   #helper
   test_coordinate_helper.cpp
   # options
