@@ -11,6 +11,7 @@ set(sources
   test_euler_system.cpp
   # networks
   test_generic_network.cpp
+  test_rk4_network.cpp
   # odes
   test_harmonic_oscillator_ode.cpp
   #observers
