@@ -17,6 +17,7 @@ set(sources
   #observers
   test_position_observer.cpp
   test_derivative_observer.cpp
+  test_pos_deriv_observer.cpp
   #helper
   test_coordinate_helper.cpp
   # options
