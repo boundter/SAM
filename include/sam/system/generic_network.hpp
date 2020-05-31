@@ -158,6 +158,15 @@ class GenericNetwork:
    */
   state_type CalculateMeanField() const;
 
+  /*!
+   * \brief Calculates the coordinates on a sphere of the same dimension as
+   * the phase space. If the deimension is 1, the corrdinates will be wrapped
+   * around the unit circle. The first coordinate is the radius and the later
+   * ones are the phases. Careful: in 3-d this is not the same as spherical
+   * coordinates with polar angle and azimuth!
+   */
+  state_type CalculateMeanFieldSpherical() const;
+
  protected:
   node_size_type node_indices_;
   node_size_type node_sizes_;
@@ -316,6 +325,12 @@ template<typename ODE, typename data_type>
 std::vector<data_type> GenericNetwork<ODE, data_type>::CalculateMeanField()
     const {
   return GenericSystem<ODE, state_type>::CalculateMeanField();
+}
+
+template<typename ODE, typename data_type>
+std::vector<data_type> GenericNetwork<ODE, data_type>::
+    CalculateMeanFieldSpherical() const {
+  return GenericSystem<ODE, state_type>::CalculateMeanFieldSpherical();
 }
 
 }  // namespace sam

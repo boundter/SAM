@@ -309,3 +309,17 @@ TEST_CASE("mean field in 2d with 2 oscillators", "[generic_network]") {
   CHECK(numerical[0] == Approx(analytical[0]).margin(0.01));
   CHECK(numerical[1] == Approx(analytical[1]).margin(0.01));
 }
+
+TEST_CASE("spherical mean field in 1d", "[generic_network]") {
+  // ODE will not be used, HarmonicOscillator as dummy
+  double omega = 1.;
+  std::vector<unsigned int> node_sizes({2, 2, 1});
+  sam::GenericNetwork<HarmonicOscillatorODE> system(node_sizes, 1, omega);
+  std::vector<double> x = {0., 0., 3*M_PI, 3*M_PI, M_PI/2.};
+  std::vector<double> analytical = {0.2, M_PI/2.};
+  system.SetPosition(x);
+  std::vector<double> spherical = system.CalculateMeanFieldSpherical();
+  REQUIRE(spherical.size() == analytical.size());
+  CHECK(spherical[0] == Approx(analytical[0]).margin(0.01));
+  CHECK(spherical[1] == Approx(analytical[1]).margin(0.01));
+}
