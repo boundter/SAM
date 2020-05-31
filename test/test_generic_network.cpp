@@ -294,3 +294,18 @@ TEST_CASE("Copying", "[generic_network]") {
     CHECK(system_derivative[5] == Approx(derivative[5]).margin(0.0001));
   }
 }
+
+TEST_CASE("mean field in 2d with 2 oscillators", "[generic_network]") {
+  // use HarmonicOscillatorODE as a dummy ODE with dimensionality 2
+  double omega = 1;
+  std::vector<unsigned int> node_sizes({1, 2});
+  unsigned int d = 2;
+  sam::GenericNetwork<HarmonicOscillatorODE> system(node_sizes, d, omega);
+  std::vector<double> initial_condition = {0., 5., 1., -2.5, -1.25, 3.};
+  std::vector<double> analytical =  {-0.0833333, 1.83333333};
+  system.SetPosition(initial_condition);
+  std::vector<double> numerical = system.CalculateMeanField();
+  REQUIRE(numerical.size() == analytical.size());
+  CHECK(numerical[0] == Approx(analytical[0]).margin(0.01));
+  CHECK(numerical[1] == Approx(analytical[1]).margin(0.01));
+}

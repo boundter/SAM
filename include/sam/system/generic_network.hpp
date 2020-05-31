@@ -147,6 +147,17 @@ class GenericNetwork:
    */
   void Resize(node_size_type node_sizes);
 
+  /*!
+   *  \brief Returns the average position of all elements in the state
+   *  space.
+   *
+   * The mean field is the average position in the state space. It has the same
+   * dimension as one unit of the system.
+   *
+   * @returns A position in state space that is the average of all units.
+   */
+  state_type CalculateMeanField() const;
+
  protected:
   node_size_type node_indices_;
   node_size_type node_sizes_;
@@ -299,6 +310,12 @@ std::vector<std::vector<data_type>> GenericNetwork<ODE, data_type>::
     }
   }
   return nodes;
+}
+
+template<typename ODE, typename data_type>
+std::vector<data_type> GenericNetwork<ODE, data_type>::CalculateMeanField()
+    const {
+  return GenericSystem<ODE, state_type>::CalculateMeanField();
 }
 
 }  // namespace sam
