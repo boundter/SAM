@@ -7,6 +7,7 @@
 // TODO(boundter): Increase test coverage
 // TODO(boundter): Derivative and Spherical in matrix form
 
+#include <utility>
 #include <vector>
 
 #include <sam/system/generic_system.hpp>
@@ -60,15 +61,27 @@ class GenericNetwork:
   node_size_type GetNodeIndices() const;
 
   /*!
-   *  Gets the state as avector of vector representation
+   *  Gets the state as a vector of vector representation
    *  state = {{node_1x_1, node_1x_2, ....}, {node_2x_1, ...}, ...}.
    */
   matrix_type GetNodes() const;
 
   /*!
+   *  Gets the state as a vector of vector representation
+   *  state = {{node_1x_1, node_1x_2, ....}, {node_2x_1, ...}, ...},
+   * where the coordinates are spherical like in GetPositionSpherical().
+   */
+  matrix_type GetNodesSpherical() const;
+
+  /*!
    *  Gets the derivative in a flattened representation.
    */
   state_type GetDerivative() const;
+
+  /*!
+   *  Gets the derivative in a node representation.
+   */
+  matrix_type GetDerivativeNodes() const;
 
   /*!
    * \brief Return the position in the state space in phases for all elements.
@@ -99,6 +112,41 @@ class GenericNetwork:
   template<typename ...Ts>
   void SetParameters(Ts... parameters);
 
+  /*!
+   *  \brief Return the dimensionality of the system.
+   *
+   *  Get the dimensionality as a pair in the form
+   *  (number of oscillators, dimensionality of the oscillator).
+   */
+  std::pair<unsigned int, unsigned int> GetDimension() const;
+
+  /*!
+   * \brief Integrate the system whith an observer.
+   *
+   * Integrate the system whith an observer. The observer is a user-specified
+   * struct/class that receives the current time and state. If none is
+   * specified the null_observer will be used which does nothing.
+   *
+   * @param dt Timestep for the integration.
+   * @param number_steps The total number of timesteps.
+   * @param observer The observer of the integration. The observer will be
+   *  called after every timestep with the current position and time.
+   */
+  template<typename observer_type>
+  void Integrate(double dt, unsigned int number_steps,
+                 observer_type observer) {}
+
+  /*!
+   * \brief Change the number of oscillators.
+   *
+   * Change the number of oscillators in the system. No new ODE object will be
+   * generated, so if ti depends on the number of oscillattors the parameters
+   * will have to be changed afterwards.
+   *
+   * @param node_sizes The new number of oscillators in each node.
+   */
+  void Resize(node_size_type node_sizes);
+
  protected:
   node_size_type node_indices_;
   node_size_type node_sizes_;
@@ -119,7 +167,7 @@ GenericNetwork<ODE, data_type>::GenericNetwork(
     : GenericSystem<ODE, state_type>(0, dimension, parameters...) {
   node_indices_ = CalculateNodeIndices(node_sizes);
   node_sizes_ = node_sizes;
-  this->Resize(CalculateNumberOscillators(node_sizes_));
+  Resize(node_sizes_);
 }
 
 template<typename ODE, typename data_type>
@@ -187,6 +235,18 @@ std::vector<data_type> GenericNetwork<ODE, data_type>::GetDerivative() const {
 }
 
 template<typename ODE, typename data_type>
+std::vector<std::vector<data_type>> GenericNetwork<ODE, data_type>::
+    GetDerivativeNodes() const {
+  state_type deriv = GenericSystem<ODE, state_type>::GetDerivative();
+  matrix_type nodes;
+  for (size_t i = 0; i < node_indices_.size() - 1; ++i) {
+    nodes.push_back(state_type(deriv.begin() + node_indices_[i],
+                               deriv.begin() + node_indices_[i+1]));
+  }
+  return nodes;
+}
+
+template<typename ODE, typename data_type>
 std::vector<data_type> GenericNetwork<ODE, data_type>::GetPositionSpherical()
     const {
   return GenericSystem<ODE, state_type>::GetPositionSpherical();
@@ -202,10 +262,43 @@ void GenericNetwork<ODE, data_type>::SetTime(double t) {
   return GenericSystem<ODE, state_type>::SetTime(t);
 }
 
-template<typename ODE, typename state_type>
+template<typename ODE, typename data_type>
 template<typename... Ts>
-void GenericNetwork<ODE, state_type>::SetParameters(Ts... parameters) {
+void GenericNetwork<ODE, data_type>::SetParameters(Ts... parameters) {
   GenericSystem<ODE, state_type>::SetParameters(parameters...);
+}
+
+template<typename ODE, typename data_type>
+std::pair<unsigned int, unsigned int> GenericNetwork<ODE, data_type>::
+    GetDimension() const {
+  return GenericSystem<ODE, state_type>::GetDimension();
+}
+
+template<typename ODE, typename data_type>
+void GenericNetwork<ODE, data_type>::Resize(node_size_type node_sizes) {
+  node_sizes_ = node_sizes;
+  node_indices_ = CalculateNodeIndices(node_sizes_);
+  GenericSystem<ODE, state_type>::
+      Resize(CalculateNumberOscillators(node_sizes_));
+}
+
+template<typename ODE, typename data_type>
+std::vector<std::vector<data_type>> GenericNetwork<ODE, data_type>::
+    GetNodesSpherical() const {
+  matrix_type nodes;
+  for (size_t i = 0; i < node_indices_.size() - 1; ++i) {
+    nodes.push_back(state_type());
+    for (size_t j = node_indices_[i]; j < node_indices_[i+1]; j += this->d_) {
+      if (this->d_ == 1) {
+        nodes.back().push_back(this->x_[j]);
+      } else {
+        state_type coord = CartesianToSpherical<state_type>(
+          this->x_.begin() + j, this->x_.begin() + j + this->d_);
+          nodes.back().insert(nodes.back().end(), coord.begin(), coord.end());
+      }
+    }
+  }
+  return nodes;
 }
 
 }  // namespace sam

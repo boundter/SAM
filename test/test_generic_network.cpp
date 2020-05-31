@@ -1,6 +1,7 @@
 // Copyright 2019 Erik Teichmann <kontakt.teichmann@gmail.com>
 
 #include <vector>
+#include <utility>
 
 #include "test/catch.hpp"
 #include "test/harmonic_oscillator_ode.hpp"
@@ -53,6 +54,16 @@ TEST_CASE("getting and setting position", "[generic_network]") {
     CHECK(nodes[1][2] == Approx(x[8]).margin(0.01));
     CHECK(nodes[1][3] == Approx(x[9]).margin(0.01));
   }
+
+  SECTION("resizing works") {
+    std::vector<unsigned int> new_sizes({4, 3});
+    std::vector<unsigned int> node_indices({0, 8, 14});
+    system.Resize(new_sizes);
+    std::vector<unsigned int> indices = system.GetNodeIndices();
+    REQUIRE(indices == node_indices);
+    std::vector<double> pos = system.GetPosition();
+    REQUIRE(pos.size() == 14);
+  }
 }
 
 TEST_CASE("getting position in spherical in 1d", "[generic_network]") {
@@ -68,6 +79,16 @@ TEST_CASE("getting position in spherical in 1d", "[generic_network]") {
   CHECK(spherical[0] == Approx(x[0]).margin(0.01));
   CHECK(spherical[1] == Approx(x[1]).margin(0.01));
   CHECK(spherical[2] == Approx(x[2]).margin(0.01));
+
+  SECTION("getting nodes spherical in 1d") {
+    std::vector<std::vector<double>> nodes = system.GetNodesSpherical();
+    REQUIRE(nodes.size() == node_size.size());
+    REQUIRE(nodes[0].size() == 1);
+    CHECK(nodes[0][0] == Approx(x[0]).margin(0.01));
+    REQUIRE(nodes[1].size() == 2);
+    CHECK(nodes[1][0] == Approx(x[1]).margin(0.01));
+    CHECK(nodes[1][1] == Approx(x[2]).margin(0.01));
+  }
 }
 
 TEST_CASE("getting position in spherical in 2d", "[generic_network]") {
@@ -87,6 +108,50 @@ TEST_CASE("getting position in spherical in 2d", "[generic_network]") {
   CHECK(spherical[3] == Approx(analytical[3]).margin(0.1));
   CHECK(spherical[4] == Approx(analytical[4]).margin(0.1));
   CHECK(spherical[5] == Approx(analytical[5]).margin(0.1));
+
+  SECTION("get dimension") {
+    std::pair<unsigned int, unsigned int> dim = system.GetDimension();
+    CHECK(dim.first == 3);
+    CHECK(dim.second == 2);
+  }
+
+  SECTION("getting nodes spherical in 2d") {
+    std::vector<std::vector<double>> nodes = system.GetNodesSpherical();
+    REQUIRE(nodes.size() == node_size.size());
+    REQUIRE(nodes[0].size() == 2);
+    CHECK(nodes[0][0] == Approx(analytical[0]).margin(0.1));
+    CHECK(nodes[0][1] == Approx(analytical[1]).margin(0.1));
+    REQUIRE(nodes[1].size() == 4);
+    CHECK(nodes[1][0] == Approx(analytical[2]).margin(0.1));
+    CHECK(nodes[1][1] == Approx(analytical[3]).margin(0.1));
+    CHECK(nodes[1][2] == Approx(analytical[4]).margin(0.1));
+    CHECK(nodes[1][3] == Approx(analytical[5]).margin(0.1));
+  }
+}
+
+TEST_CASE("Derivative", "[generic_network]") {
+  double omega = 2.;
+  std::vector<unsigned int> node_size({1, 2});
+  unsigned int d = 2;
+  sam::GenericNetwork<HarmonicOscillatorODE> system(node_size, d, omega);
+  double t = 5.;
+  std::vector<double> x({1., 2., 3., 4., 5., 6.});
+  std::vector<double> derivative({2., -4., 4., -12., 6., -20.});
+  system.SetTime(t);
+  system.SetPosition(x);
+
+  SECTION("derivative in nodes") {
+    std::vector<std::vector<double>> nodes = system.GetDerivativeNodes();
+    REQUIRE(nodes.size() == 2);
+    REQUIRE(nodes[0].size() == 2);
+    CHECK(nodes[0][0] == Approx(derivative[0]).margin(0.0001));
+    CHECK(nodes[0][1] == Approx(derivative[1]).margin(0.0001));
+    REQUIRE(nodes[1].size() == 4);
+    CHECK(nodes[1][0] == Approx(derivative[2]).margin(0.0001));
+    CHECK(nodes[1][1] == Approx(derivative[3]).margin(0.0001));
+    CHECK(nodes[1][2] == Approx(derivative[4]).margin(0.0001));
+    CHECK(nodes[1][3] == Approx(derivative[5]).margin(0.0001));
+    }
 }
 
 TEST_CASE("Copying", "[generic_network]") {
