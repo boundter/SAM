@@ -3,6 +3,7 @@
 #ifndef INCLUDE_SAM_OBSERVER_POS_DERIV_OBSERVER_HPP_
 #define INCLUDE_SAM_OBSERVER_POS_DERIV_OBSERVER_HPP_
 
+#include <memory>
 #include <vector>
 
 #include <sam/observer/position_observer.hpp>
