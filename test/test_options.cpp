@@ -100,20 +100,41 @@ TEST_CASE("parsing arguments", "[options]") {
       CHECK(eps == Approx(0.5).margin(0.01));
       CHECK(filename == "b.csv");
     }
+
+    SECTION("negative numbers as argument") {
+      int argc = 3;
+      char *argv[argc+1];
+      FillArgv({"test", "--epsilon", "-2"}, argv);
+      sam::ParseArguments(argc, argv, args);
+      CHECK(eps == Approx(-2.).margin(0.01));
+    }
 }
 
 TEST_CASE("double vector as argument", "[options]") {
   std::vector<double> test_vector;
-  int argc = 4;
-  char* argv[argc+1];
-  FillArgv({"test", "--N", "2.5", "32"}, argv);
   std::vector<std::unique_ptr<sam::ArgumentBase>> args;
   args.emplace_back(new sam::Argument<std::vector<double>>(
       "N", "number oscillators", test_vector, std::vector<double>()));
-  sam::ParseArguments(argc, argv, args);
-  REQUIRE(test_vector.size() == 2);
-  CHECK(test_vector[0] == Approx(2.5).margin(0.01));
-  CHECK(test_vector[1] == Approx(32).margin(0.01));
+
+  SECTION("simple vector") {
+    int argc = 4;
+    char* argv[argc+1];
+    FillArgv({"test", "--N", "2.5", "32"}, argv);
+    sam::ParseArguments(argc, argv, args);
+    REQUIRE(test_vector.size() == 2);
+    CHECK(test_vector[0] == Approx(2.5).margin(0.01));
+    CHECK(test_vector[1] == Approx(32).margin(0.01));
+  }
+
+  SECTION("negative numbers") {
+    int argc = 4;
+    char* argv[argc+1];
+    FillArgv({"test", "--N", "-2", "-3.5"}, argv);
+    sam::ParseArguments(argc, argv, args);
+    REQUIRE(test_vector.size() == 2);
+    CHECK(test_vector[0] == Approx(-2).margin(0.01));
+    CHECK(test_vector[1] == Approx(-3.5).margin(0.01));
+  }
 }
 
 TEST_CASE("double vector as argument default", "[options]") {
