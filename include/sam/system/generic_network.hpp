@@ -167,6 +167,11 @@ class GenericNetwork:
    */
   state_type CalculateMeanFieldSpherical() const;
 
+  matrix_type CalculateNodesMeanField() const;
+
+  matrix_type CalculateNodesMeanFieldSpherical() const;
+
+
  protected:
   node_size_type node_indices_;
   node_size_type node_sizes_;
@@ -331,6 +336,32 @@ template<typename ODE, typename data_type>
 std::vector<data_type> GenericNetwork<ODE, data_type>::
     CalculateMeanFieldSpherical() const {
   return GenericSystem<ODE, state_type>::CalculateMeanFieldSpherical();
+}
+
+template<typename ODE, typename data_type>
+std::vector<std::vector<data_type>> GenericNetwork<ODE, data_type>::
+    CalculateNodesMeanField() const {
+  matrix_type mean_field;
+  for (size_t i = 0; i < node_indices_.size() - 1; ++i) {
+    mean_field.push_back(
+      GenericSystem<ODE, state_type>::CalculateMeanField(
+        this->x_.begin() + node_indices_[i],
+        this->x_.begin() + node_indices_[i+1]));
+  }
+  return mean_field;
+}
+
+template<typename ODE, typename data_type>
+std::vector<std::vector<data_type>> GenericNetwork<ODE, data_type>::
+    CalculateNodesMeanFieldSpherical() const {
+  matrix_type mean_field;
+  for (size_t i = 0; i < node_indices_.size() - 1; ++i) {
+    mean_field.push_back(
+      GenericSystem<ODE, state_type>::CalculateMeanFieldSpherical(
+        this->x_.begin() + node_indices_[i],
+        this->x_.begin() + node_indices_[i+1]));
+  }
+  return mean_field;
 }
 
 }  // namespace sam

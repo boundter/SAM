@@ -323,3 +323,44 @@ TEST_CASE("spherical mean field in 1d", "[generic_network]") {
   CHECK(spherical[0] == Approx(analytical[0]).margin(0.01));
   CHECK(spherical[1] == Approx(analytical[1]).margin(0.01));
 }
+
+TEST_CASE("nodes mean field in 1d", "[generic_network]") {
+  // ODE will not be used, HarmonicOscillator as dummy
+  double omega = 1.;
+  std::vector<unsigned int> node_sizes({2, 2, 1});
+  sam::GenericNetwork<HarmonicOscillatorODE> system(node_sizes, 1, omega);
+  std::vector<double> x = {0., M_PI/2., M_PI, 5.*M_PI/4, M_PI/2};
+  system.SetPosition(x);
+
+  SECTION("mean field") {
+    std::vector<std::vector<double>> analytical({{M_PI/4.},
+                                                {9.*M_PI/8.},
+                                                {M_PI/2.}});
+    std::vector<std::vector<double>> mean = system.CalculateNodesMeanField();
+    REQUIRE(mean.size() == 3);
+    REQUIRE(mean[0].size() == 1);
+    CHECK(mean[0][0] == Approx(analytical[0][0]).margin(0.001));
+    REQUIRE(mean[1].size() == 1);
+    CHECK(mean[1][0] == Approx(analytical[1][0]).margin(0.001));
+    REQUIRE(mean[2].size() == 1);
+    CHECK(mean[2][0] == Approx(analytical[2][0]).margin(0.001));
+  }
+
+  SECTION("spherical mean field") {
+    std::vector<std::vector<double>> analytical({{0.7071, 0.7854},
+                                                {0.92388, -2.74889},
+                                                {1., M_PI/2.}});
+    std::vector<std::vector<double>> mean =
+        system.CalculateNodesMeanFieldSpherical();
+    REQUIRE(mean.size() == 3);
+    REQUIRE(mean[0].size() == 2);
+    CHECK(mean[0][0] == Approx(analytical[0][0]).margin(0.001));
+    CHECK(mean[0][1] == Approx(analytical[0][1]).margin(0.001));
+    REQUIRE(mean[1].size() == 2);
+    CHECK(mean[1][0] == Approx(analytical[1][0]).margin(0.001));
+    CHECK(mean[1][1] == Approx(analytical[1][1]).margin(0.001));
+    REQUIRE(mean[2].size() == 2);
+    CHECK(mean[2][0] == Approx(analytical[2][0]).margin(0.001));
+    CHECK(mean[2][1] == Approx(analytical[2][1]).margin(0.001));
+  }
+}
