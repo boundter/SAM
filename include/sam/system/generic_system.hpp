@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-#include <sam/helper/coordinate_helper.hpp>
+#include "../helper/coordinate_helper.hpp"
 
 namespace sam {
 

@@ -6,7 +6,7 @@
 #include <cmath>
 #include <vector>
 
-#include "include/sam/analysis/henon.hpp"
+#include "./henon.hpp"
 
 namespace sam {
 

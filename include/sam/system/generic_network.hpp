@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-#include <sam/system/generic_system.hpp>
+#include "./generic_system.hpp"
 
 namespace sam {
 

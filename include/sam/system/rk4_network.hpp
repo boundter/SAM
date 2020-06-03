@@ -10,7 +10,7 @@
 #include <boost/numeric/odeint/integrate/null_observer.hpp>
 #include <boost/numeric/odeint/stepper/runge_kutta4.hpp>
 
-#include <sam/system/generic_network.hpp>
+#include "./generic_network.hpp"
 
 namespace sam {
 

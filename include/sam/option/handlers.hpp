@@ -6,10 +6,14 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <string>
 
 #include <boost/program_options.hpp>
+#include <boost/lexical_cast/try_lexical_convert.hpp>
+#include <boost/program_options/option.hpp>
+#include <boost/program_options/value_semantic.hpp>
 
-#include <sam/option/argument_base.hpp>
+#include "./argument_base.hpp"
 
 namespace std {
 
@@ -22,6 +26,7 @@ template<typename T>
 }
 
 }  // namespace std
+
 
 namespace sam {
 
@@ -49,6 +54,28 @@ void WriteArgumentsToFile(std::vector<std::unique_ptr<ArgumentBase>>& arguments,
 
 // Implementation
 
+// https://stackoverflow.com/questions/4107087/accepting-negative-doubles-with-boostprogram-options
+std::vector< boost::program_options::option> ignore_numbers(
+    std::vector<std::string>& args) {
+    std::vector< boost::program_options::option> result;
+    int pos = 0;
+    while (!args.empty()) {
+        const auto& arg = args[0];
+        double num;
+        if (boost::conversion::try_lexical_convert(arg, num)) {
+            result.push_back(boost::program_options::option());
+              boost::program_options::option& opt = result.back();
+            opt.position_key = pos++;
+            opt.value.push_back(arg);
+            opt.original_tokens.push_back(arg);
+            args.erase(args.begin());
+        } else {
+            break;
+        }
+    }
+    return result;
+}
+
 void ParseArguments(int argc, char* argv[],
                     std::vector<std::unique_ptr<ArgumentBase>>& arguments) {
   boost::program_options::options_description desc("Allowed options");
@@ -58,7 +85,11 @@ void ParseArguments(int argc, char* argv[],
   }
   boost::program_options::variables_map vmap;
   boost::program_options::store(
-    boost::program_options::parse_command_line(argc, argv, desc), vmap);
+    boost::program_options::command_line_parser(argc, argv)
+    .extra_style_parser(&ignore_numbers)
+    .options(desc)
+    .run(),
+    vmap);
   boost::program_options::notify(vmap);
   if (vmap.count("help")) {
     std::cout << desc;

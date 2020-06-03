@@ -8,7 +8,7 @@
 
 #include <boost/program_options.hpp>
 
-#include <sam/option/argument_base.hpp>
+#include "./argument_base.hpp"
 
 namespace std {
 

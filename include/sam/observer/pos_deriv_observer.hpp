@@ -6,8 +6,8 @@
 #include <memory>
 #include <vector>
 
-#include <sam/observer/position_observer.hpp>
-#include <sam/observer/derivative_observer.hpp>
+#include "./position_observer.hpp"
+#include "./derivative_observer.hpp"
 
 namespace sam {
 
