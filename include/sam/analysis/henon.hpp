@@ -7,6 +7,8 @@
 #include <utility>
 #include <vector>
 
+#include "../system/rk4_system.hpp"
+
 namespace sam {
 
 /*!
@@ -23,8 +25,8 @@ struct CrossingParameters {
  *
  * The Henon allows for the calculation of the crossing of an axis by using
  * the relevant dimension as an independent variable. This allows a very precise
- * approximation. The actual approximation is done using the Euler-method, so
- * a close start to the target is needed.
+ * approximation. The actual approximation is done using the
+ * Runge-Kutta-4-method, so a close start to the target is needed.
  * For more information see his paper at:
  * https://www.sciencedirect.com/science/article/abs/pii/0167278982900343
  *
@@ -87,35 +89,50 @@ std::pair<double, state_type> IntegrateToCrossingConditional(
 // Implementation
 
 template<typename system_type, typename state_type>
+class InverseHelperODE {
+ public:
+  InverseHelperODE(system_type system, int indx)
+    : system_(system), indx_(indx) {}
+
+  void operator()(const state_type& x, state_type& dx, double t) {
+    state_type state = x;
+    state[indx_] = t;
+    system_.SetPosition(state);
+    system_.SetTime(x[indx_]);
+    state_type derivative = system_.GetDerivative();
+    for (size_t i = 0; i < derivative.size(); ++i) {
+      if (i == indx_) {
+        dx[indx_] = 1./derivative[indx_];
+      } else {
+        dx[i] = derivative[i] / derivative[indx_];
+      }
+    }
+  }
+
+ private:
+  system_type system_;
+  int indx_;
+};
+
+template<typename system_type, typename state_type>
 std::pair<double, state_type> HenonTrick(const system_type& system,
                                          CrossingParameters params) {
   std::pair<unsigned int, unsigned int> dimensionality = system.GetDimension();
   // dimensionality.second is the dimension of each oscillator
   size_t indx = dimensionality.second * params.n_osc + params.dimension;
-  state_type derivative = system.GetDerivative();
-  for (size_t i = 0; i < derivative.size(); ++i) {
-    if (i == indx) {
-      derivative[indx] = 1./derivative[indx];
-      continue;
-    } else {
-      derivative[i] /= derivative[indx];
-    }
-  }
+  auto helper_system =
+      RK4System<InverseHelperODE<system_type, state_type>, state_type>(
+          dimensionality.first, dimensionality.second, system, indx);
+  state_type initial = system.GetPosition();
+  helper_system.SetTime(initial[indx]);
+  initial[indx] = system.GetTime();
+  helper_system.SetPosition(initial);
+  helper_system.Integrate(params.target - system.GetPosition()[indx], 1);
 
-  double t = system.GetTime();
-  state_type state = system.GetPosition();
-  double dx = params.target - state[indx];
-  // Euler Integration
-  t += derivative[indx]*dx;
-  for (size_t i = 0; i < state.size(); ++i) {
-    if (i == indx) {
-      state[i] = params.target;
-      continue;
-    } else {
-      state[i] += derivative[i]*dx;
-    }
-  }
-  std::pair<double, state_type> ret_values(t, state);
+  state_type res = helper_system.GetPosition();
+  double t = res[indx];
+  res[indx] = helper_system.GetTime();
+  std::pair<double, state_type> ret_values(t, res);
   return ret_values;
 }
 
